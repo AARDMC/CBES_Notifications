@@ -246,7 +246,8 @@
       </div>
       <div class="action-btns">
         <button class="btn" onclick="viewData()">📋 View Data</button>
-        <button class="btn" onclick="showExport()">📥 Export CSV</button>
+        <!-- Modified: Passes "this" to cleanly trigger local download -->
+        <button class="btn" onclick="showExport(this)">📥 Export CSV</button>
         <button class="btn p" id="submitBtn" onclick="sub()" disabled>Select Facility to Submit</button>
       </div>
     </div>
@@ -539,7 +540,6 @@ function onFacilityChange() {
     .then(r => r.json())
     .then(res => {
       if (res.exists && !res.isAutoPopulated) {
-        // Exists, and it's a manual report (100% complete)
         isAlreadySubmitted = true; lastSubmittedFacility = fname;
         document.getElementById('lockedFacilityName').textContent = fname;
         document.getElementById('facilityLockedMsg').classList.add('show');
@@ -547,7 +547,6 @@ function onFacilityChange() {
         document.getElementById('editBtn').disabled = false;
         loadExistingRecord(fname);
       } else if (res.exists && res.isAutoPopulated) {
-        // Exists, but auto-populated (0%). It is NOT locked.
         isAlreadySubmitted = false; lastSubmittedFacility = '';
         document.getElementById('editBtn').disabled = true;
       } else {
@@ -719,10 +718,56 @@ function viewData() {
     }).catch(() => msg('❌ Failed to fetch data. Please try again later.', 'e'));
 }
 
-function showExport() {
+// FULLY REWRITTEN EXPORT FUNCTION TO BYPASS ECHO AND FORCE LOCAL DOWNLOAD
+function showExport(btn) {
   if (!currentWoredaId) return msg('⚠️ Please enter a valid Woreda ID to export data.', 'e');
   let f = document.getElementById('fs').value || '';
-  window.open(SCRIPT_API_URL + '?action=exportCSV&woreda=' + encodeURIComponent(submitWoreda) + '&week=' + epiW + '&year=' + epiY + '&facility=' + encodeURIComponent(f), '_blank');
+  
+  let originalText = btn.textContent;
+  btn.textContent = '⏳ Downloading...';
+  btn.disabled = true;
+
+  fetch(SCRIPT_API_URL + '?action=getData&woreda=' + encodeURIComponent(submitWoreda) + '&week=' + epiW + '&year=' + epiY + '&facility=' + encodeURIComponent(f))
+    .then(r => r.json())
+    .then(res => {
+      if (!res.headers || !res.rows || res.rows.length === 0) {
+        msg('⚠️ No data found to export.', 'e');
+        btn.textContent = originalText;
+        btn.disabled = false;
+        return;
+      }
+      
+      let csvContent = [];
+      // Push Headers safely
+      csvContent.push(res.headers.map(h => '"' + String(h).replace(/"/g, '""') + '"').join(','));
+      // Push Data safely
+      res.rows.forEach(row => {
+        csvContent.push(row.map(c => '"' + String(c !== null && c !== undefined ? c : '').replace(/"/g, '""') + '"').join(','));
+      });
+      
+      // \uFEFF ensures Excel reads UTF-8 correctly
+      let csvString = "\uFEFF" + csvContent.join('\n'); 
+      let fileName = `CBES_${submitWoreda}_Week${epiW}_${epiY}${f ? '_' + f.replace(/\s+/g, '') : ''}.csv`;
+      
+      let blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+      let link = document.createElement("a");
+      let url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", fileName);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      msg('✅ File downloaded successfully!', 's');
+      btn.textContent = originalText;
+      btn.disabled = false;
+    })
+    .catch(() => {
+      msg('❌ Failed to generate CSV data export.', 'e');
+      btn.textContent = originalText;
+      btn.disabled = false;
+    });
 }
 
 function bulkZeroSubmit() {
