@@ -364,7 +364,7 @@ function loadFacilities() {
           facList.push({ id: c[cid], zone: c[cz], woreda: c[cw], fac: c[cf] });
         }
       }
-      // On start, isolate to 0% because Woreda isn't selected
+      
       document.getElementById('agg_comp').textContent = '0%';
       document.getElementById('agg_time').textContent = '0%';
       document.getElementById('navGauge').style.setProperty('--comp', '0%');
@@ -373,7 +373,6 @@ function loadFacilities() {
     .catch(() => msg('Could not load facilities list.', 'e'));
 }
 
-// Strictly evaluates KPI for the single entered Woreda
 function loadMetrics() {
   if (!submitWoreda || !currentWoredaId) {
     document.getElementById('agg_comp').textContent = '0%';
@@ -384,10 +383,14 @@ function loadMetrics() {
   }
   
   let facs = facList.filter(f => f.id === currentWoredaId);
-  let expected = facs.length > 0 ? facs.length : 1;
-  let wParam = '&woreda=' + encodeURIComponent(submitWoreda);
+  let fName = document.getElementById('fs').value;
   
-  fetch(SCRIPT_API_URL + '?action=getMetrics&week=' + epiW + '&year=' + epiY + '&expected=' + expected + wParam)
+  // If specific facility selected -> evaluates out of 1. If not -> evaluates out of total in Woreda.
+  let expected = fName ? 1 : (facs.length > 0 ? facs.length : 1);
+  let wParam = '&woreda=' + encodeURIComponent(submitWoreda);
+  let fParam = fName ? '&facility=' + encodeURIComponent(fName) : '';
+  
+  fetch(SCRIPT_API_URL + '?action=getMetrics&week=' + epiW + '&year=' + epiY + '&expected=' + expected + wParam + fParam)
     .then(r => r.json())
     .then(data => {
       if (data.status === 'success') {
@@ -482,9 +485,11 @@ function validateWoreda() {
   isEditMode = false; isAlreadySubmitted = false; sel = {};
   renderTags(); renderST(); renderCards(); updateSections();
   
+  let prevWoreda = submitWoreda;
+  
   if (!id) { 
     hint.innerHTML = ''; submitWoreda = ''; currentWoredaId = '';
-    loadMetrics(); // Forces 0%
+    if(prevWoreda !== '') loadMetrics();
     return; 
   }
   
@@ -497,7 +502,7 @@ function validateWoreda() {
     let safeW = currentWoreda.trim().replace(/Woreda\s*0*(\d+)/i, 'Woreda$1').replace(/\s+/g, '_');
     submitWoreda = safeZ + '_' + safeW;
     
-    loadMetrics(); // Will correctly fetch KPI for just this Woreda
+    loadMetrics();
     
     document.getElementById('zf').value = currentZone;
     document.getElementById('wf').value = currentWoreda;
@@ -527,6 +532,10 @@ function onFacilityChange() {
   document.getElementById('submitBtn').disabled = false;
   document.getElementById('submitBtn').textContent = 'Submit Report';
   document.getElementById('editBtn').disabled = true;
+  
+  // Important: Automatically scopes KPI gauge to specifically this selected facility
+  loadMetrics();
+  
   if (!fname) return;
   
   fetch(SCRIPT_API_URL + '?action=checkDuplicate&zone=' + encodeURIComponent(currentZone) + '&woreda=' + encodeURIComponent(submitWoreda) + '&facility=' + encodeURIComponent(fname) + '&week=' + epiW + '&year=' + epiY)
@@ -679,7 +688,7 @@ function sub() {
       if (res.status === 'success') {
         msg(isEditMode ? '✓ Record updated!' : '✓ Submitted successfully!', 's');
         if (typeof confetti === 'function') confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
-        loadMetrics(); // Will calculate based ONLY on current Woreda
+        loadMetrics(); 
         isAlreadySubmitted = true; isEditMode = false; lastSubmittedFacility = f;
         document.getElementById('lockedFacilityName').textContent = f;
         document.getElementById('facilityLockedMsg').classList.add('show');
@@ -750,7 +759,7 @@ function bulkZeroSubmit() {
         if(res.status === 'success') {
           msg(`✓ Successfully auto-populated ${missing.length} missing reports!`, 's');
           if (typeof confetti === 'function') confetti({ particleCount: 200, spread: 100, origin: { y: 0.5 } });
-          loadMetrics(); // Will remain correct since it uses active Woreda scope
+          loadMetrics(); 
         } else msg('Error: ' + res.message, 'e');
         btn.textContent = '🪄 Auto Populate'; btn.disabled = false;
       });
@@ -771,7 +780,6 @@ function resetAll() {
   document.getElementById('editBtn').disabled = true;
   document.getElementById('submitBtn').textContent = 'Select Facility to Submit';
   
-  // Forces gauge to 0% since no Woreda is selected
   loadMetrics(); 
 }
 
