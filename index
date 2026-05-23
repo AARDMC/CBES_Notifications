@@ -2,9 +2,10 @@
 <html>
 <head>
   <base target="_top">
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Addis Ababa PHEM - CBES Notifications Form</title>
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+  
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     body{font-family:Arial,sans-serif;background:#f0f4ff;padding:10px;font-size:16px;color:#1e293b}
@@ -82,6 +83,7 @@
     .msg.show { transform: translateX(-50%) translateY(0); opacity: 1; visibility: visible; }
     .msg.s { background: linear-gradient(135deg, #059669, #10b981); border: 2px solid #34d399; }
     .msg.e { background: linear-gradient(135deg, #dc2626, #ef4444); border: 2px solid #f87171; }
+    .msg.w { background: linear-gradient(135deg, #d97706, #f59e0b); border: 2px solid #fbbf24; }
   </style>
 </head>
 <body>
@@ -121,11 +123,12 @@
       </div>
     </div>
 
-    <!-- REMOVED: display:none. The form is now always visible -->
+    <!-- The formBody is ALWAYS VISIBLE now -->
     <div id="formBody">
-      
       <div class="section-title">Reportable Diseases & Conditions</div>
-      <div class="cards" id="diseaseCards"></div>
+      <div class="cards" id="diseaseCards">
+        <!-- Cards inject here automatically via Javascript -->
+      </div>
 
       <div class="section-title">Rumors & Unusual Events</div>
       <div class="cards">
@@ -167,12 +170,14 @@
       <div class="btns">
         <button class="btn" id="submitBtn" onclick="submitData()" disabled>Submit Form to Database (Select Facility First)</button>
       </div>
-
     </div>
   </div>
 </div>
 
 <div class="msg" id="msg"></div>
+
+<!-- Deferred Confetti Script so it doesn't block loading -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js" defer></script>
 
 <script>
 // YOUR SPECIFIC GOOGLE SCRIPT WEB APP URL
@@ -210,20 +215,29 @@ const DISEASES = [
 ];
 
 function init(){
-  var t = new Date(), wd = (t.getDay() + 6) % 7 + 1, th = new Date(t);
-  th.setDate(t.getDate() - wd - 3);
-  epiY = th.getFullYear(); 
-  epiM = ["January","February","March","April","May","June","July","August","September","October","November","December"][th.getMonth()];
-  var j1 = new Date(epiY, 0, 1);
-  epiW = Math.floor((Math.floor((th - j1) / 86400000) + 10) / 7);
-  if(epiW < 1) epiW = 1; if(epiW > 52) epiW = 52;
-  
-  document.getElementById('lbl_y').textContent = epiY;
-  document.getElementById('lbl_m').textContent = epiM;
-  document.getElementById('lbl_w').textContent = epiW;
-  
-  loadFacilities();
-  renderDiseaseCards();
+  try {
+    // 1. Immediately render diseases so screen is never blank
+    renderDiseaseCards();
+    
+    // 2. Set up dates
+    var t = new Date(), wd = (t.getDay() + 6) % 7 + 1, th = new Date(t);
+    th.setDate(t.getDate() - wd - 3);
+    epiY = th.getFullYear(); 
+    epiM = ["January","February","March","April","May","June","July","August","September","October","November","December"][th.getMonth()];
+    var j1 = new Date(epiY, 0, 1);
+    epiW = Math.floor((Math.floor((th - j1) / 86400000) + 10) / 7);
+    if(epiW < 1) epiW = 1; if(epiW > 52) epiW = 52;
+    
+    document.getElementById('lbl_y').textContent = epiY;
+    document.getElementById('lbl_m').textContent = epiM;
+    document.getElementById('lbl_w').textContent = epiW;
+    
+    // 3. Load facilities
+    loadFacilities();
+  } catch (error) {
+    console.error("Initialization error:", error);
+    msg("Form loaded, but a minor script error occurred.", "w");
+  }
 }
 
 function parseCSV(str) {
@@ -266,16 +280,42 @@ function loadFacilities(){
       let owner = (c[co] || '').toLowerCase().trim();
       let status = (c[cs] || '').toLowerCase().trim();
       
-      // RELAXED FILTER: Checks for "operational", "health center", and "public" or "gov"
       if(status.includes('operational') && type.includes('health center') && (owner.includes('public') || owner.includes('gov'))){
         facList.push({ id: c[cid], zone: c[cz], woreda: c[cw], fac: c[cf] });
       }
     }
-    
-    if(facList.length === 0) {
-        msg('Warning: Master list loaded but no Public Health Centers were found.', 'w');
-    }
   }).catch(() => msg('Could not load Master Facility List from Google', 'e'));
+}
+
+function renderDiseaseCards() {
+  let container = document.getElementById('diseaseCards');
+  let html = '';
+  
+  for(let i=0; i<DISEASES.length; i++) {
+    let d = DISEASES[i];
+    let row30m = d.t30 
+      ? '<div class="f-col"><label>Within 30 mins</label><input type="number" id="'+d.k+'_30m" value="0" min="0" step="1" oninput="calculateAndValidate()"></div>'
+      : '<input type="hidden" id="'+d.k+'_30m" value="0">';
+
+    html += '<div class="card">' +
+      '<div class="card-header">'+d.n+'</div>' +
+      '<div class="card-body">' +
+        '<div class="f-row">' +
+          '<div class="f-col">' +
+            '<label>From community</label>' +
+            '<input type="number" id="'+d.k+'_comm" value="0" min="0" step="1" oninput="calculateAndValidate()">' +
+          '</div>' +
+          '<div class="f-col">' +
+            '<label>Fulfilling case def.</label>' +
+            '<input type="number" id="'+d.k+'_def" value="0" min="0" step="1" oninput="calculateAndValidate()">' +
+          '</div>' +
+          row30m +
+        '</div>' +
+        '<div class="error-msg" id="'+d.k+'_err">Logic Error: Comm >= Case Def >= 30 Min is required!</div>' +
+      '</div>' +
+    '</div>';
+  }
+  container.innerHTML = html;
 }
 
 function validateWoreda(){
@@ -312,60 +352,26 @@ function onFacilityChange() {
   calculateAndValidate(); // Unlocks submit button if valid
 }
 
-function renderDiseaseCards() {
-  let container = document.getElementById('diseaseCards');
-  let html = '';
-  
-  DISEASES.forEach(d => {
-    html += `
-    <div class="card">
-      <div class="card-header">${d.n}</div>
-      <div class="card-body">
-        <div class="f-row">
-          <div class="f-col">
-            <label>From community</label>
-            <input type="number" id="${d.k}_comm" value="0" min="0" step="1" oninput="calculateAndValidate()">
-          </div>
-          <div class="f-col">
-            <label>Fulfilling case def.</label>
-            <input type="number" id="${d.k}_def" value="0" min="0" step="1" oninput="calculateAndValidate()">
-          </div>
-          ${d.t30 ? `
-          <div class="f-col">
-            <label>Within 30 mins</label>
-            <input type="number" id="${d.k}_30m" value="0" min="0" step="1" oninput="calculateAndValidate()">
-          </div>
-          ` : `<input type="hidden" id="${d.k}_30m" value="0">`}
-        </div>
-        <div class="error-msg" id="${d.k}_err">Logic Error: Comm >= Case Def >= 30 Min is required!</div>
-      </div>
-    </div>`;
-  });
-  container.innerHTML = html;
-}
-
 function calculateAndValidate() {
   let totComm = 0, totDef = 0, tot30m = 0;
   let allValid = true;
 
-  // 1. Check if a facility is selected
   let facilitySelected = document.getElementById('fs').value !== '';
+  let btn = document.getElementById('submitBtn');
+  
   if (!facilitySelected) {
     allValid = false;
-    document.getElementById('submitBtn').textContent = 'Submit Form to Database (Select Facility First)';
+    btn.textContent = 'Submit Form to Database (Select Facility First)';
   } else {
-    document.getElementById('submitBtn').textContent = 'Submit Form to Database';
+    btn.textContent = 'Submit Form to Database';
   }
 
-  // 2. Validate disease logics
   DISEASES.forEach(d => {
     let comm = parseInt(document.getElementById(d.k + '_comm').value) || 0;
     let def = parseInt(document.getElementById(d.k + '_def').value) || 0;
     let t30 = parseInt(document.getElementById(d.k + '_30m').value) || 0;
-    
     let errEl = document.getElementById(d.k + '_err');
     
-    // Validate Logics: Community >= Case Definition >= 30 mins
     let isValid = true;
     if (comm < def) isValid = false;
     if (d.t30 && def < t30) isValid = false;
@@ -392,8 +398,7 @@ function calculateAndValidate() {
   document.getElementById('tot_def').value = totDef;
   document.getElementById('tot_30m').value = tot30m;
 
-  // Toggle button based on overall validity
-  document.getElementById('submitBtn').disabled = !allValid;
+  btn.disabled = !allValid;
 }
 
 function submitData() {
