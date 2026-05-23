@@ -174,7 +174,7 @@
 <div class="msg" id="msg"></div>
 
 <script>
-// YOUR SPECIFIC GOOGLE SCRIPT WEB APP URL
+// THIS IS THE WEB APP URL THAT CONNECTS YOUR FRONTEND TO YOUR BACKEND
 const SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwEWlUDyUQmQUT-5kDfgHnK3yy5_MAhuaz1IxZe7OoFR0iFYoTkBVsN9gBDN7hZbCYQ/exec";
 
 let facList = [], currentFacilities = [];
@@ -260,7 +260,7 @@ function loadFacilities(){
     for(var i = 1; i < rows.length; i++){
       var c = rows[i];
       if(c.length < 4) continue;
-      // STRICT FILTER: Only Operational Public Health Centers
+      
       let type = (c[ct] || '').toLowerCase();
       let owner = (c[co] || '').toLowerCase();
       let status = (c[cs] || '').toLowerCase();
