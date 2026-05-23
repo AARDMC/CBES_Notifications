@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <base target="_top">
   <meta charset="UTF-8">
@@ -84,10 +84,38 @@
     .msg.s { background: linear-gradient(135deg, #059669, #10b981); border: 2px solid #34d399; }
     .msg.e { background: linear-gradient(135deg, #dc2626, #ef4444); border: 2px solid #f87171; }
     .msg.w { background: linear-gradient(135deg, #d97706, #f59e0b); border: 2px solid #fbbf24; }
+    
+    #error-catcher {
+      display: none;
+      background: #fef2f2;
+      color: #b91c1c;
+      padding: 15px;
+      margin: 15px;
+      border: 2px solid #ef4444;
+      border-radius: 8px;
+      font-weight: bold;
+    }
   </style>
+
+  <!-- Error Catcher Script - Must be at the top! -->
+  <script>
+    window.onerror = function(message, source, lineno, colno, error) {
+      var errDiv = document.getElementById('error-catcher');
+      if(errDiv) {
+        errDiv.style.display = 'block';
+        errDiv.innerHTML = '⚠️ A script error stopped the page from loading:<br><br>' + 
+                           '<b>Error:</b> ' + message + '<br>' +
+                           '<b>Line:</b> ' + lineno;
+      }
+    };
+  </script>
 </head>
 <body>
-<div class="container">
+
+<!-- This will catch and display any fatal errors -->
+<div id="error-catcher"></div>
+
+<div class="container" id="main-container">
   <div class="navbar">
     <div class="nav-logo">
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
@@ -123,7 +151,6 @@
       </div>
     </div>
 
-    <!-- The formBody is ALWAYS VISIBLE now -->
     <div id="formBody">
       <div class="section-title">Reportable Diseases & Conditions</div>
       <div class="cards" id="diseaseCards">
@@ -176,15 +203,18 @@
 
 <div class="msg" id="msg"></div>
 
-<!-- Deferred Confetti Script so it doesn't block loading -->
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 
 <script>
 // YOUR SPECIFIC GOOGLE SCRIPT WEB APP URL
 const SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwEWlUDyUQmQUT-5kDfgHnK3yy5_MAhuaz1IxZe7OoFR0iFYoTkBVsN9gBDN7hZbCYQ/exec";
 
-let facList = [], currentFacilities = [];
-let epiY, epiM, epiW, currentZone = '', currentWoreda = '';
+var facList = [];
+var currentZone = '';
+var currentWoreda = '';
+var epiY = '';
+var epiM = '';
+var epiW = '';
 
 const DISEASES = [
   { n: "Malaria", k: "malaria", t30: false },
@@ -214,30 +244,28 @@ const DISEASES = [
   { n: "Obstetric fistula", k: "fistula", t30: true }
 ];
 
-function init(){
-  try {
-    // 1. Immediately render diseases so screen is never blank
-    renderDiseaseCards();
-    
-    // 2. Set up dates
-    var t = new Date(), wd = (t.getDay() + 6) % 7 + 1, th = new Date(t);
-    th.setDate(t.getDate() - wd - 3);
-    epiY = th.getFullYear(); 
-    epiM = ["January","February","March","April","May","June","July","August","September","October","November","December"][th.getMonth()];
-    var j1 = new Date(epiY, 0, 1);
-    epiW = Math.floor((Math.floor((th - j1) / 86400000) + 10) / 7);
-    if(epiW < 1) epiW = 1; if(epiW > 52) epiW = 52;
-    
-    document.getElementById('lbl_y').textContent = epiY;
-    document.getElementById('lbl_m').textContent = epiM;
-    document.getElementById('lbl_w').textContent = epiW;
-    
-    // 3. Load facilities
-    loadFacilities();
-  } catch (error) {
-    console.error("Initialization error:", error);
-    msg("Form loaded, but a minor script error occurred.", "w");
-  }
+function initForm(){
+  renderDiseaseCards();
+  
+  var t = new Date();
+  var wd = (t.getDay() + 6) % 7 + 1;
+  var th = new Date(t);
+  th.setDate(t.getDate() - wd - 3);
+  epiY = th.getFullYear(); 
+  
+  var monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  epiM = monthNames[th.getMonth()];
+  
+  var j1 = new Date(epiY, 0, 1);
+  epiW = Math.floor((Math.floor((th - j1) / 86400000) + 10) / 7);
+  if(epiW < 1) epiW = 1; 
+  if(epiW > 52) epiW = 52;
+  
+  document.getElementById('lbl_y').textContent = epiY;
+  document.getElementById('lbl_m').textContent = epiM;
+  document.getElementById('lbl_w').textContent = epiW;
+  
+  loadFacilities();
 }
 
 function parseCSV(str) {
@@ -263,8 +291,8 @@ function parseCSV(str) {
 
 function loadFacilities(){
   fetch('https://docs.google.com/spreadsheets/d/1H35dwM2pQO6pdycz-HcOKXiVlL10GXZX9Vvme4CLzQE/gviz/tq?tqx=out:csv&sheet=MFR%20Facility%20List')
-  .then(r => r.text())
-  .then(csv => {
+  .then(function(r){ return r.text(); })
+  .then(function(csv) {
     var rows = parseCSV(csv);
     var hdr = rows[0];
     var cid = hdr.indexOf('Woreda ID'), cz = hdr.indexOf('Zone'), cw = hdr.indexOf('Woreda');
@@ -276,24 +304,24 @@ function loadFacilities(){
       var c = rows[i];
       if(c.length < 4) continue;
       
-      let type = (c[ct] || '').toLowerCase().trim();
-      let owner = (c[co] || '').toLowerCase().trim();
-      let status = (c[cs] || '').toLowerCase().trim();
+      var type = (c[ct] || '').toLowerCase().trim();
+      var owner = (c[co] || '').toLowerCase().trim();
+      var status = (c[cs] || '').toLowerCase().trim();
       
-      if(status.includes('operational') && type.includes('health center') && (owner.includes('public') || owner.includes('gov'))){
+      if(status.indexOf('operational') !== -1 && type.indexOf('health center') !== -1 && (owner.indexOf('public') !== -1 || owner.indexOf('gov') !== -1)){
         facList.push({ id: c[cid], zone: c[cz], woreda: c[cw], fac: c[cf] });
       }
     }
-  }).catch(() => msg('Could not load Master Facility List from Google', 'e'));
+  }).catch(function(){ msg('Could not load Master Facility List', 'e'); });
 }
 
 function renderDiseaseCards() {
-  let container = document.getElementById('diseaseCards');
-  let html = '';
+  var container = document.getElementById('diseaseCards');
+  var html = '';
   
-  for(let i=0; i<DISEASES.length; i++) {
-    let d = DISEASES[i];
-    let row30m = d.t30 
+  for(var i=0; i<DISEASES.length; i++) {
+    var d = DISEASES[i];
+    var row30m = d.t30 
       ? '<div class="f-col"><label>Within 30 mins</label><input type="number" id="'+d.k+'_30m" value="0" min="0" step="1" oninput="calculateAndValidate()"></div>'
       : '<input type="hidden" id="'+d.k+'_30m" value="0">';
 
@@ -326,19 +354,19 @@ function validateWoreda(){
   document.getElementById('fs').disabled = true;
   document.getElementById('zf').value = '';
   document.getElementById('wf').value = '';
-  calculateAndValidate(); // Lock the submit button
+  calculateAndValidate(); 
   
   if(!id) { hint.innerHTML = 'Type a valid Woreda ID'; hint.className = 'hint'; return; }
   
-  var facs = facList.filter(f => f.id === id);
+  var facs = facList.filter(function(f){ return f.id === id; });
   if(facs.length > 0){
     hint.innerHTML = '✔ Valid Woreda ID'; hint.className = 'hint hint-valid';
     currentZone = facs[0].zone; currentWoreda = facs[0].woreda;
     document.getElementById('zf').value = currentZone;
     document.getElementById('wf').value = currentWoreda;
     
-    facs.forEach(f => {
-      let opt = document.createElement('option');
+    facs.forEach(function(f){
+      var opt = document.createElement('option');
       opt.value = f.fac; opt.textContent = f.fac;
       document.getElementById('fs').appendChild(opt);
     });
@@ -349,15 +377,15 @@ function validateWoreda(){
 }
 
 function onFacilityChange() {
-  calculateAndValidate(); // Unlocks submit button if valid
+  calculateAndValidate();
 }
 
 function calculateAndValidate() {
-  let totComm = 0, totDef = 0, tot30m = 0;
-  let allValid = true;
+  var totComm = 0, totDef = 0, tot30m = 0;
+  var allValid = true;
 
-  let facilitySelected = document.getElementById('fs').value !== '';
-  let btn = document.getElementById('submitBtn');
+  var facilitySelected = document.getElementById('fs').value !== '';
+  var btn = document.getElementById('submitBtn');
   
   if (!facilitySelected) {
     allValid = false;
@@ -366,13 +394,14 @@ function calculateAndValidate() {
     btn.textContent = 'Submit Form to Database';
   }
 
-  DISEASES.forEach(d => {
-    let comm = parseInt(document.getElementById(d.k + '_comm').value) || 0;
-    let def = parseInt(document.getElementById(d.k + '_def').value) || 0;
-    let t30 = parseInt(document.getElementById(d.k + '_30m').value) || 0;
-    let errEl = document.getElementById(d.k + '_err');
+  for(var i=0; i<DISEASES.length; i++) {
+    var d = DISEASES[i];
+    var comm = parseInt(document.getElementById(d.k + '_comm').value) || 0;
+    var def = parseInt(document.getElementById(d.k + '_def').value) || 0;
+    var t30 = parseInt(document.getElementById(d.k + '_30m').value) || 0;
+    var errEl = document.getElementById(d.k + '_err');
     
-    let isValid = true;
+    var isValid = true;
     if (comm < def) isValid = false;
     if (d.t30 && def < t30) isValid = false;
     
@@ -392,7 +421,7 @@ function calculateAndValidate() {
     totComm += comm;
     totDef += def;
     tot30m += t30;
-  });
+  }
 
   document.getElementById('tot_comm').value = totComm;
   document.getElementById('tot_def').value = totDef;
@@ -402,10 +431,10 @@ function calculateAndValidate() {
 }
 
 function submitData() {
-  let facility = document.getElementById('fs').value;
+  var facility = document.getElementById('fs').value;
   if(!facility) return msg('Please select a facility', 'e');
 
-  let payload = {
+  var payload = {
     action: 'submitCommunityData',
     Region: 'Addis Ababa',
     SubCity: currentZone,
@@ -419,13 +448,14 @@ function submitData() {
     Data: {}
   };
 
-  DISEASES.forEach(d => {
+  for(var i=0; i<DISEASES.length; i++) {
+    var d = DISEASES[i];
     payload.Data[d.k] = {
       comm: document.getElementById(d.k + '_comm').value,
       def: document.getElementById(d.k + '_def').value,
       t30: d.t30 ? document.getElementById(d.k + '_30m').value : 0
     };
-  });
+  }
 
   payload.Data.rumors = {
     received: document.getElementById('rumor_rcv').value,
@@ -433,7 +463,7 @@ function submitData() {
     unusual: document.getElementById('unusual_ev').value
   };
 
-  let btn = document.getElementById('submitBtn');
+  var btn = document.getElementById('submitBtn');
   btn.disabled = true;
   btn.textContent = 'Submitting...';
 
@@ -442,19 +472,19 @@ function submitData() {
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify(payload)
   })
-  .then(response => response.json())
-  .then(data => {
+  .then(function(response){ return response.json(); })
+  .then(function(data) {
     if(data.status === 'success') { 
       msg('Data Successfully Submitted to System!', 's');
       if (typeof confetti === 'function') confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }});
-      setTimeout(() => { location.reload(); }, 3000);
+      setTimeout(function(){ location.reload(); }, 3000);
     } else {
       msg('Server Error: ' + data.message, 'e');
       btn.textContent = 'Submit Form to Database';
       btn.disabled = false;
     }
   })
-  .catch(error => {
+  .catch(function(error) {
     msg('Network Error: Could not connect to Google Script.', 'e');
     btn.textContent = 'Submit Form to Database';
     btn.disabled = false;
@@ -465,10 +495,12 @@ function msg(text, type) {
   var m = document.getElementById('msg');
   m.innerHTML = '<span>' + text + '</span>';
   m.className = 'msg ' + type + ' show';
-  setTimeout(() => { m.className = 'msg ' + type; }, 4000);
+  setTimeout(function(){ m.className = 'msg ' + type; }, 4000);
 }
 
-window.onload = init;
+// Safely start the script when the HTML is fully loaded
+window.addEventListener('DOMContentLoaded', initForm);
+
 </script>
 </body>
 </html>
