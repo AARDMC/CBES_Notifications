@@ -6,34 +6,28 @@
   <title>Addis Ababa PHEM - CBES Notifications Form</title>
   
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2310b981' stroke-width='2.5'><path d='M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2'></path><circle cx='9' cy='7' r='4'></circle><path d='M23 21v-2a4 4 0 0 0-3-3.87'></path><path d='M16 3.13a4 4 0 0 1 0 7.75'></path></svg>">
-  
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+  
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: Arial, sans-serif; background: #f0fdf4; padding: 10px; font-size: 16px; color: #1e293b; }
-    
     .container { max-width: 950px; margin: 0 auto; background: white; border-radius: 12px; padding: 0; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
-    
     .navbar { background: linear-gradient(135deg, #065f46 0%, #047857 30%, #059669 60%, #10b981 100%); padding: 16px 20px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; border-radius: 12px 12px 0 0; }
     .navbar .nav-logo { background: rgba(255,255,255,0.2); width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3); }
     .navbar .nav-title-group { flex: 1; min-width: 200px; }
     .navbar .nav-title { font-size: 19px; font-weight: 800; color: white; line-height: 1.2; text-shadow: 0 1px 3px rgba(0,0,0,0.2); }
     .navbar .nav-subtitle { font-size: 13px; color: rgba(255,255,255,0.85); font-weight: 500; margin-top: 2px; }
-
     .gauge-container { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.15); padding: 4px 12px; border-radius: 20px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
     .gauge-wrapper { position: relative; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; }
     .gauge-ring { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 50%; background: conic-gradient(#10b981 var(--comp,0%),rgba(255,255,255,0.2) 0); -webkit-mask: radial-gradient(closest-side,transparent 75%,black 76%); mask: radial-gradient(closest-side,transparent 75%,black 76%); }
     .gauge-text { font-size: 10px; font-weight: 800; color: white; position: relative; z-index: 2; }
     .gauge-label { font-size: 12px; font-weight: 700; color: white; }
-    
     .content { padding: 15px; }
-    
     .info-bar { display: flex; flex-wrap: wrap; justify-content: space-evenly; align-items: center; background: linear-gradient(to right, #059669, #10b981); color: white; padding: 6px 12px; border-radius: 10px; margin-bottom: 12px; font-size: 14px; font-weight: 600; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); gap: 10px; }
     .info-bar div { display: flex; flex-direction: row; align-items: center; gap: 8px; white-space: nowrap; }
     .info-bar span { background: rgba(255,255,255,0.25); color: white; padding: 4px 12px; border-radius: 6px; font-size: 14px; }
     .reset-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.4); color: white; padding: 4px 12px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
     .reset-btn:hover { background: rgba(255,255,255,0.25); }
-    
     .facility-sticky { position: sticky; top: 0; z-index: 50; background: white; padding: 15px; margin: -15px -15px 15px -15px; border-bottom: 1px solid #cbd5e1; box-shadow: 0 4px 8px -2px rgba(0,0,0,0.08); }
     .row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
     .col { flex: 1 1 150px; min-width: 120px; }
@@ -43,14 +37,11 @@
     .woreda-hint { font-size: 12px; margin-top: 3px; display: flex; align-items: center; gap: 4px; }
     .woreda-valid { color: #10b981; }
     .woreda-invalid { color: #ef4444; }
-
     .facility-locked { background: #fef3c7; border: 1px solid #fcd34d; color: #92400e; padding: 10px 14px; border-radius: 8px; font-size: 14px; font-weight: 600; margin-bottom: 12px; display: none; align-items: center; gap: 10px; flex-wrap: wrap; }
     .facility-locked.show { display: flex; }
     .facility-locked .edit-btn { padding: 6px 14px; font-size: 13px; background: #92400e; color: white; border-radius: 6px; cursor: pointer; font-weight: 700; border: none; margin-left: auto; }
-    
     .toggle-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: #f8fafc; border-radius: 8px; margin-bottom: 12px; }
     .toggle-row label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: 600; font-size: 14px; }
-    
     .search-box { margin-bottom: 8px; position: relative; }
     .search-box input { width: 100%; padding: 10px 10px 10px 34px; border: 1.5px solid #e2e8f0; border-radius: 20px; font-size: 14px; }
     .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
@@ -62,13 +53,11 @@
     .tag.weekly { border-left: 4px solid #0891b2; }
     .tag.immediate.sel { background: #ea580c; border-color: #ea580c; }
     .tag.weekly.sel { background: #0891b2; border-color: #0891b2; }
-    
     .cards { margin: 12px 0; }
     .card { background: white; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
     .card-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: linear-gradient(135deg, #065f46, #047857); color: white; cursor: pointer; font-weight: 700; font-size: 15px; }
     .card-body { padding: 10px 16px; background: #f8fafc; }
     .card-body.hide { display: none; }
-    
     .f-row { display: flex; flex-wrap: wrap; gap: 6px; }
     .f-col { flex: 1 1 55px; }
     .f-col.wide { flex: 2 1 100px; }
@@ -77,10 +66,8 @@
     .f-col input.input-error { border-color: #ef4444; background: #fef2f2; }
     .f-col textarea { width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 13px; resize: vertical; font-family: Arial, sans-serif; }
     .f-col input[readonly] { background: #f1f5f9; font-weight: 700; }
-    
     .error-msg { color: #ef4444; font-size: 11px; font-weight: 600; margin-top: 4px; display: none; }
     .error-msg.show { display: block; }
-    
     .bottom-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 15px; }
     .kpi-cards { display: flex; gap: 10px; flex: 1 1 auto; min-width: 200px; }
     .kpi-card { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 12px 16px; border-radius: 12px; flex: 1; box-shadow: 0 2px 4px rgba(0,0,0,0.05); min-width: 90px; }
@@ -88,33 +75,22 @@
     .kpi-card .kpi-value { font-size: 20px; font-weight: 900; }
     .kpi-comp { background: linear-gradient(135deg, #ecfdf5, #d1fae5); border: 1px solid #a7f3d0; color: #065f46; }
     .kpi-time { background: linear-gradient(135deg, #eff6ff, #dbeafe); border: 1px solid #bfdbfe; color: #1e40af; }
-    
     .action-btns { display: flex; flex-wrap: wrap; gap: 8px; flex: 2 1 auto; }
     .btn { flex: 1 1 auto; padding: 12px 16px; border-radius: 24px; border: 1px solid #cbd5e1; background: white; font-weight: 700; font-size: 14px; cursor: pointer; text-align: center; transition: 0.2s; white-space: nowrap; }
     .btn.p { background: #059669; color: white; border-color: #059669; }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
     .msg { position: fixed; top: 25px; left: 50%; transform: translateX(-50%) translateY(-30px); z-index: 99999; padding: 12px 24px; border-radius: 50px; font-size: 15px; font-weight: 700; color: white; opacity: 0; visibility: hidden; transition: 0.5s; max-width: 90vw; }
     .msg.show { transform: translateX(-50%) translateY(0); opacity: 1; visibility: visible; }
     .msg.s { background: #059669; }
     .msg.e { background: #dc2626; }
-
     .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center; padding: 15px; }
     .modal-overlay.show { display: flex; }
     .modal-content { background: white; padding: 20px; border-radius: 12px; max-width: 950px; width: 100%; max-height: 90vh; overflow: auto; }
     .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
     .data-table th, .data-table td { border: 1px solid #cbd5e1; padding: 6px 8px; text-align: left; white-space: nowrap; }
     .data-table th { background: #f1f5f9; font-weight: 700; position: sticky; top: 0; }
-    
-    @media(max-width: 700px) {
-      .bottom-bar { flex-direction: column; }
-      .kpi-cards { width: 100%; }
-      .action-btns { width: 100%; }
-    }
-    @media(max-width: 500px) {
-      .navbar .nav-title { font-size: 15px; }
-      .action-btns .btn { font-size: 12px; padding: 10px; }
-    }
+    @media(max-width: 700px) { .bottom-bar { flex-direction: column; } .kpi-cards { width: 100%; } .action-btns { width: 100%; } }
+    @media(max-width: 500px) { .navbar .nav-title { font-size: 15px; } .action-btns .btn { font-size: 12px; padding: 10px; } }
   </style>
 </head>
 <body>
@@ -180,8 +156,9 @@
 
     <div class="toggle-row">
       <span style="font-weight:700">Reporting:</span>
-      <label><input type="radio" name="ct" value="cases" checked onchange="tog()">Cases to Report</label>
-      <label><input type="radio" name="ct" value="nocases" onchange="tog()">No Cases</label>
+      <!-- Radio button labels updated -->
+      <label><input type="radio" name="ct" value="cases" checked onchange="tog()">Notifications</label>
+      <label><input type="radio" name="ct" value="nocases" onchange="tog()">No Notifications</label>
     </div>
 
     <div id="ds">
@@ -291,9 +268,6 @@
 </div>
 
 <script>
-// =========================================================
-// API CONNECTION SETUP (GITHUB TO GOOGLE SHEET)
-// =========================================================
 // Ensure you replace this with your latest Deployment URL:
 const SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwEWlUDyUQmQUT-5kDfgHnK3yy5_MAhuaz1IxZe7OoFR0iFYoTkBVsN9gBDN7hZbCYQ/exec";
 
@@ -325,23 +299,16 @@ const DISEASES = [
   { n: "Obstetric Fistula", k: "fistula", t30: true, r: "immediate" }
 ];
 
-let sel = {};
-let facList = [];
-let currentZone = '';
-let currentWoreda = '';
-let epiY, epiM, epiW;
-let currentWoredaId = '';
-let isEditMode = false;
-let lastSubmittedFacility = '';
-let isAlreadySubmitted = false;
+let sel = {}, facList = [];
+let currentZone = '', currentWoreda = '', submitWoreda = '';
+let epiY, epiM, epiW, currentWoredaId = '';
+let isEditMode = false, lastSubmittedFacility = '', isAlreadySubmitted = false;
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 function init() {
   try {
-    let t = new Date();
-    let wd = (t.getDay() + 6) % 7 + 1;
-    let th = new Date(t);
+    let t = new Date(), wd = (t.getDay() + 6) % 7 + 1, th = new Date(t);
     th.setDate(t.getDate() - wd - 3);
     
     epiY = th.getFullYear();
@@ -356,9 +323,7 @@ function init() {
     document.getElementById('lbl_m').textContent = epiM;
     document.getElementById('lbl_w').textContent = epiW;
     
-    renderTags();
-    loadFacilities();
-    loadMetrics();
+    renderTags(); loadFacilities(); loadMetrics();
   } catch (e) {
     msg('Initialization error. Check console.', 'e');
     console.error(e);
@@ -366,45 +331,23 @@ function init() {
 }
 
 function parseCSV(s) {
-  let r = [];
-  let row = [];
-  let f = '';
-  let q = false;
+  let r = [], row = [], f = '', q = false;
   for (let i = 0; i < s.length; i++) {
-    let c = s[i];
-    let n = s[i + 1];
+    let c = s[i], n = s[i + 1];
     if (q) {
-      if (c === '"') {
-        if (n === '"') {
-          f += '"';
-          i++;
-        } else {
-          q = false;
-        }
-      } else {
-        f += c;
-      }
+      if (c === '"') { if (n === '"') { f += '"'; i++; } else q = false; } else f += c;
     } else {
-      if (c === '"') {
-        q = true;
-      } else if (c === ',') {
-        row.push(f.trim());
-        f = '';
-      } else if (c === '\n' || c === '\r') {
+      if (c === '"') q = true;
+      else if (c === ',') { row.push(f.trim()); f = ''; }
+      else if (c === '\n' || c === '\r') {
         if (c === '\r' && n === '\n') i++;
         row.push(f.trim());
         if (row.some(x => x !== '')) r.push(row);
-        row = [];
-        f = '';
-      } else {
-        f += c;
-      }
+        row = []; f = '';
+      } else f += c;
     }
   }
-  if (f || row.length) {
-    row.push(f.trim());
-    r.push(row);
-  }
+  if (f || row.length) { row.push(f.trim()); r.push(row); }
   return r;
 }
 
@@ -412,29 +355,21 @@ function loadFacilities() {
   fetch('https://docs.google.com/spreadsheets/d/1H35dwM2pQO6pdycz-HcOKXiVlL10GXZX9Vvme4CLzQE/gviz/tq?tqx=out:csv&sheet=MFR%20Facility%20List')
     .then(r => r.text())
     .then(csv => {
-      let rows = parseCSV(csv);
-      let hdr = rows[0];
-      let cid = hdr.indexOf('Woreda ID');
-      let cz = hdr.indexOf('Zone');
-      let cw = hdr.indexOf('Woreda');
-      let cf = hdr.indexOf('Health_Facility');
-      let ct = hdr.indexOf('Facility Type');
-      let co = hdr.indexOf('Ownership');
-      let cs = hdr.indexOf('Operational Status');
+      let rows = parseCSV(csv), hdr = rows[0];
+      let cid = hdr.indexOf('Woreda ID'), cz = hdr.indexOf('Zone'), cw = hdr.indexOf('Woreda'), cf = hdr.indexOf('Health_Facility');
+      let ct = hdr.indexOf('Facility Type'), co = hdr.indexOf('Ownership'), cs = hdr.indexOf('Operational Status');
       
       facList = [];
       for (let i = 1; i < rows.length; i++) {
         let c = rows[i];
         if (c.length < 4) continue;
-        let ty = (c[ct] || '').toLowerCase();
-        let ow = (c[co] || '').toLowerCase();
-        let st = (c[cs] || '').toLowerCase();
+        let ty = (c[ct] || '').toLowerCase(), ow = (c[co] || '').toLowerCase(), st = (c[cs] || '').toLowerCase();
         if (st.includes('operational') && ty.includes('health center') && (ow.includes('public') || ow.includes('gov'))) {
           facList.push({ id: c[cid], zone: c[cz], woreda: c[cw], fac: c[cf] });
         }
       }
     })
-    .catch(() => msg('Could not load facilities list. Are permissions public?', 'e'));
+    .catch(() => msg('Could not load facilities list.', 'e'));
 }
 
 function loadMetrics() {
@@ -442,17 +377,14 @@ function loadMetrics() {
     .then(r => r.json())
     .then(data => {
       if (data.status === 'success') {
-        let comp = data.completeness || 0;
-        let time = data.timeliness || 0;
+        let comp = data.completeness || 0, time = data.timeliness || 0;
         document.getElementById('agg_comp').textContent = comp + '%';
         document.getElementById('agg_time').textContent = time + '%';
         document.getElementById('navGauge').style.setProperty('--comp', comp + '%');
         document.getElementById('navCompText').textContent = comp + '%';
       }
     })
-    .catch(err => {
-      console.error("Metric fetch failed, likely CORS or Auth issue.", err);
-    });
+    .catch(err => console.error("Metric fetch failed.", err));
 }
 
 function renderTags() {
@@ -463,16 +395,8 @@ function renderTags() {
 }
 
 function togD(k) {
-  if (sel[k] !== undefined) {
-    delete sel[k];
-  } else {
-    sel[k] = {};
-  }
-  renderTags();
-  renderST();
-  renderCards();
-  calculateAndValidate();
-  updateSections();
+  if (sel[k] !== undefined) delete sel[k]; else sel[k] = {};
+  renderTags(); renderST(); renderCards(); calculateAndValidate(); updateSections();
 }
 
 function renderST() {
@@ -496,19 +420,13 @@ function fil() {
 }
 
 function renderCards() {
-  let k = Object.keys(sel);
-  let c = document.getElementById('dc');
-  if (!k.length) {
-    c.innerHTML = '';
-    return;
-  }
+  let k = Object.keys(sel), c = document.getElementById('dc');
+  if (!k.length) { c.innerHTML = ''; return; }
+  
   c.innerHTML = k.map(x => {
     let d = DISEASES.find(y => y.k === x);
-    let t30 = d.t30 
-      ? '<div class="f-col"><label>Done within 30 min</label><input type="number" id="' + d.k + '_30m" value="0" oninput="calculateAndValidate()"></div>' 
-      : '<input type="hidden" id="' + d.k + '_30m" value="0">';
+    let t30 = d.t30 ? '<div class="f-col"><label>Done within 30 min</label><input type="number" id="' + d.k + '_30m" value="0" oninput="calculateAndValidate()"></div>' : '<input type="hidden" id="' + d.k + '_30m" value="0">';
       
-    // Note: The card body is rendered OPEN by default (no 'hide' class).
     return '<div class="card">' +
              '<div class="card-header" onclick="this.nextElementSibling.classList.toggle(\'hide\')">' +
                '<span>' + d.n + '</span>' +
@@ -522,8 +440,7 @@ function renderCards() {
                  '<div class="f-col wide">' +
                    '<label>Fulfilling case definition</label>' +
                    '<input type="number" id="' + d.k + '_def" value="0" oninput="calculateAndValidate()">' +
-                 '</div>' + 
-                 t30 +
+                 '</div>' + t30 +
                '</div>' +
                '<div class="error-msg" id="' + d.k + '_err">Error: Community ≥ Case Def' + (d.t30 ? ' ≥ 30 Min' : '') + '</div>' +
              '</div>' +
@@ -549,19 +466,10 @@ function validateWoreda() {
   calculateAndValidate();
   document.getElementById('facilityLockedMsg').classList.remove('show');
   
-  isEditMode = false;
-  isAlreadySubmitted = false;
-  sel = {};
+  isEditMode = false; isAlreadySubmitted = false; sel = {};
+  renderTags(); renderST(); renderCards(); updateSections();
   
-  renderTags();
-  renderST();
-  renderCards();
-  updateSections();
-  
-  if (!id) {
-    hint.innerHTML = '';
-    return;
-  }
+  if (!id) { hint.innerHTML = ''; return; }
   
   let facs = facList.filter(f => f.id === id);
   if (facs.length) {
@@ -571,13 +479,15 @@ function validateWoreda() {
     currentWoreda = facs[0].woreda;
     currentWoredaId = id;
     
+    // Auto-format Woreda string for DB submission (e.g., "Arada_Woreda1")
+    submitWoreda = currentZone.trim() + '_' + currentWoreda.trim().replace(/Woreda\s*0*(\d+)/i, 'Woreda$1').replace(/\s+/g, '');
+    
     document.getElementById('zf').value = currentZone;
     document.getElementById('wf').value = currentWoreda;
     
     facs.forEach(f => {
       let o = document.createElement('option');
-      o.value = f.fac;
-      o.textContent = f.fac;
+      o.value = f.fac; o.textContent = f.fac;
       document.getElementById('fs').appendChild(o);
     });
     
@@ -595,15 +505,9 @@ function validateWoreda() {
 function onFacilityChange() {
   let fname = document.getElementById('fs').value;
   document.getElementById('facilityLockedMsg').classList.remove('show');
-  isEditMode = false;
-  isAlreadySubmitted = false;
-  sel = {};
+  isEditMode = false; isAlreadySubmitted = false; sel = {};
   
-  renderTags();
-  renderST();
-  renderCards();
-  updateSections();
-  calculateAndValidate();
+  renderTags(); renderST(); renderCards(); updateSections(); calculateAndValidate();
   
   document.getElementById('submitBtn').disabled = false;
   document.getElementById('submitBtn').textContent = 'Submit Report';
@@ -611,97 +515,64 @@ function onFacilityChange() {
   
   if (!fname) return;
   
-  fetch(SCRIPT_API_URL + '?action=checkDuplicate&zone=' + encodeURIComponent(currentZone) + '&woreda=' + encodeURIComponent(currentWoreda) + '&facility=' + encodeURIComponent(fname) + '&week=' + epiW + '&year=' + epiY)
+  // Checking duplicate using the securely formatted submitWoreda
+  fetch(SCRIPT_API_URL + '?action=checkDuplicate&zone=' + encodeURIComponent(currentZone) + '&woreda=' + encodeURIComponent(submitWoreda) + '&facility=' + encodeURIComponent(fname) + '&week=' + epiW + '&year=' + epiY)
     .then(r => r.json())
     .then(res => {
       if (res.exists) {
-        isAlreadySubmitted = true;
-        lastSubmittedFacility = fname;
+        isAlreadySubmitted = true; lastSubmittedFacility = fname;
         document.getElementById('lockedFacilityName').textContent = fname;
         document.getElementById('facilityLockedMsg').classList.add('show');
         document.getElementById('submitBtn').disabled = true;
         document.getElementById('editBtn').disabled = false;
         loadExistingRecord(fname);
       } else {
-        isAlreadySubmitted = false;
-        lastSubmittedFacility = fname;
+        isAlreadySubmitted = false; lastSubmittedFacility = fname;
         document.getElementById('editBtn').disabled = true;
       }
     })
-    .catch(err => {
-      console.error("Duplicate check failed", err);
-    });
+    .catch(err => console.error("Duplicate check failed", err));
 }
 
 function loadExistingRecord(fname) {
-  fetch(SCRIPT_API_URL + '?action=getRecord&zone=' + encodeURIComponent(currentZone) + '&woreda=' + encodeURIComponent(currentWoreda) + '&facility=' + encodeURIComponent(fname) + '&week=' + epiW + '&year=' + epiY)
+  fetch(SCRIPT_API_URL + '?action=getRecord&zone=' + encodeURIComponent(currentZone) + '&woreda=' + encodeURIComponent(submitWoreda) + '&facility=' + encodeURIComponent(fname) + '&week=' + epiW + '&year=' + epiY)
     .then(r => r.json())
     .then(res => {
-      if (res.status === 'success' && res.record) {
-        let r = res.record;
-        let headers = res.headers;
+      if (res.status === 'success' && res.recordData) {
         sel = {};
+        let rd = res.recordData;
         
-        // FIX: Ensure that if ANY number > 0 is populated for a disease, it selects the tag and shows the accordion.
         DISEASES.forEach(d => {
-          let commCol = hdrIndex(headers, 'Tot_no_' + d.k + '_notif');
-          let defCol = hdrIndex(headers, 'Tot_no_' + d.k + '_fulf');
-          let t30Col = hdrIndex(headers, 'Tot_no_' + d.k + '_30min');
-          
-          let cVal = commCol !== -1 ? parseInt(r[commCol]) || 0 : 0;
-          let dVal = defCol !== -1 ? parseInt(r[defCol]) || 0 : 0;
-          let tVal = t30Col !== -1 ? parseInt(r[t30Col]) || 0 : 0;
-          
-          // If any field has a number greater than 0, mark it as selected
-          if (cVal > 0 || dVal > 0 || tVal > 0) {
-            sel[d.k] = {};
+          let obj = rd[d.k];
+          if (obj && (obj.comm > 0 || obj.def > 0 || (d.t30 && obj.t30 > 0))) {
+            sel[d.k] = {}; // Auto-select tag if > 0
           }
         });
         
-        renderTags();
-        renderST();
-        renderCards(); // This renders the accordion boxes open for all selected tags
-        updateSections();
+        renderTags(); renderST(); renderCards(); updateSections();
         
         setTimeout(() => {
           DISEASES.forEach(d => {
             if (sel[d.k] !== undefined) {
-              let commCol = hdrIndex(headers, 'Tot_no_' + d.k + '_notif');
-              let defCol = hdrIndex(headers, 'Tot_no_' + d.k + '_fulf');
-              let t30Col = hdrIndex(headers, 'Tot_no_' + d.k + '_30min');
-              
-              if (commCol !== -1) document.getElementById(d.k + '_comm').value = r[commCol] || 0;
-              if (defCol !== -1) document.getElementById(d.k + '_def').value = r[defCol] || 0;
-              if (t30Col !== -1 && d.t30) document.getElementById(d.k + '_30m').value = r[t30Col] || 0;
+              let obj = rd[d.k];
+              document.getElementById(d.k + '_comm').value = obj.comm || 0;
+              document.getElementById(d.k + '_def').value = obj.def || 0;
+              if (d.t30) document.getElementById(d.k + '_30m').value = obj.t30 || 0;
             }
           });
           
-          let rcvCol = hdrIndex(headers, 'Notif_recveived_6406');
-          let invCol = hdrIndex(headers, 'Notif_investig_6406');
-          let unuCol = hdrIndex(headers, 'Unusual_health_event');
-          
-          if (rcvCol !== -1) document.getElementById('rumor_rcv').value = r[rcvCol] || 0;
-          if (invCol !== -1) document.getElementById('rumor_inv').value = r[invCol] || 0;
-          if (unuCol !== -1) document.getElementById('unusual_ev').value = r[unuCol] || '';
+          document.getElementById('rumor_rcv').value = rd.rumors.received || 0;
+          document.getElementById('rumor_inv').value = rd.rumors.investigated || 0;
+          document.getElementById('unusual_ev').value = rd.rumors.unusual || '';
           
           calculateAndValidate();
-        }, 200);
+        }, 150);
       }
     });
 }
 
-function hdrIndex(headers, search) {
-  if (!headers) return -1;
-  let s = search.toLowerCase().replace(/_/g, '');
-  for (let i = 0; i < headers.length; i++) {
-    if (headers[i] && headers[i].toLowerCase().replace(/_/g, '') === s) return i;
-  }
-  return -1;
-}
-
 function editRecord() {
-  isEditMode = true;
-  isAlreadySubmitted = false;
+  isEditMode = true; isAlreadySubmitted = false;
   document.getElementById('facilityLockedMsg').classList.remove('show');
   document.querySelector('input[name="ct"][value="cases"]').checked = true;
   tog();
@@ -712,21 +583,15 @@ function editRecord() {
 }
 
 function calculateAndValidate() {
-  let tc = 0;
-  let td = 0;
-  let tt = 0;
-  let allValid = true;
+  let tc = 0, td = 0, tt = 0, allValid = true, hasNonZero = false;
   let fs = document.getElementById('fs').value !== '';
   let btn = document.getElementById('submitBtn');
   
   if (!fs) {
     btn.textContent = 'Select Facility to Submit';
-    btn.disabled = true;
-    return;
+    btn.disabled = true; return;
   }
-  if (!isEditMode) {
-    btn.textContent = 'Submit Report';
-  }
+  if (!isEditMode) btn.textContent = 'Submit Report';
   
   DISEASES.forEach(d => {
     if (sel[d.k] === undefined) return;
@@ -739,38 +604,30 @@ function calculateAndValidate() {
     let def = parseInt(defEl?.value) || 0;
     let t30 = parseInt(t30El?.value) || 0;
     
+    if (comm > 0 || def > 0 || (d.t30 && t30 > 0)) hasNonZero = true;
+    
     let errEl = document.getElementById(d.k + '_err');
     let isValid = true;
     
-    // Validate logical errors inline
-    if (comm < def) {
-      isValid = false;
-      if (errEl) errEl.classList.add('show');
-    } else {
-      if (errEl) errEl.classList.remove('show');
-    }
+    if (comm < def) { isValid = false; if (errEl) errEl.classList.add('show'); } 
+    else { if (errEl) errEl.classList.remove('show'); }
     
-    if (d.t30 && def < t30) {
-      isValid = false;
-      if (errEl) errEl.classList.add('show');
-    } else {
-      if (errEl && comm >= def) errEl.classList.remove('show');
-    }
+    if (d.t30 && def < t30) { isValid = false; if (errEl) errEl.classList.add('show'); } 
+    else { if (errEl && comm >= def) errEl.classList.remove('show'); }
     
     if (!isValid) allValid = false;
-    tc += comm;
-    td += def;
-    tt += t30;
+    tc += comm; td += def; tt += t30;
   });
 
   document.getElementById('tot_comm').value = tc;
   document.getElementById('tot_def').value = td;
   document.getElementById('tot_30m').value = tt;
   
-  let keysCount = Object.keys(sel).length;
   let isNoCases = document.querySelector('input[name="ct"]:checked').value === 'nocases';
+  let keysCount = Object.keys(sel).length;
   
-  btn.disabled = !(allValid && (keysCount > 0 || isNoCases));
+  // Submit Active ONLY if Valid AND (No Notifications OR (Tags Selected AND Has values > 0))
+  btn.disabled = !(allValid && (isNoCases || (keysCount > 0 && hasNonZero)));
 }
 
 function tog() {
@@ -789,27 +646,11 @@ function sub() {
   
   let no = document.querySelector('input[name="ct"]:checked').value === 'nocases';
   
-  // POPUP ZERO-VALIDATION Check
-  if (!no) {
-    let zeroFields = [];
-    DISEASES.forEach(d => {
-      if (sel[d.k] === undefined) return;
-      let comm = parseInt(document.getElementById(d.k + '_comm')?.value) || 0;
-      let def = parseInt(document.getElementById(d.k + '_def')?.value) || 0;
-      if (comm === 0 && def === 0) {
-        zeroFields.push(d.n);
-      }
-    });
-    if (zeroFields.length > 0) {
-      return msg('⚠️ Please enter a number greater than 0 for: ' + zeroFields.join(', '), 'e');
-    }
-  }
-  
   let p = {
     action: isEditMode ? 'editRecord' : 'submitCommunityData',
     Region: 'Addis Ababa',
     SubCity: currentZone,
-    Woreda: currentWoreda,
+    Woreda: submitWoreda, // Sent securely formatted to database
     FacilityName: f,
     Year: epiY,
     Month: epiM,
@@ -835,44 +676,33 @@ function sub() {
   }
   
   let btn = document.getElementById('submitBtn');
-  btn.disabled = true;
-  btn.textContent = 'Processing...';
+  btn.disabled = true; btn.textContent = 'Processing...';
   
-  fetch(SCRIPT_API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify(p)
-  })
+  fetch(SCRIPT_API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(p) })
     .then(r => r.json())
     .then(res => {
       if (res.status === 'success') {
         msg(isEditMode ? '✓ Record updated!' : '✓ Submitted successfully!', 's');
         if (typeof confetti === 'function') confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
         loadMetrics();
-        isAlreadySubmitted = true;
-        isEditMode = false;
-        lastSubmittedFacility = f;
+        isAlreadySubmitted = true; isEditMode = false; lastSubmittedFacility = f;
         document.getElementById('lockedFacilityName').textContent = f;
         document.getElementById('facilityLockedMsg').classList.add('show');
-        document.getElementById('submitBtn').disabled = true;
-        document.getElementById('editBtn').disabled = false;
+        document.getElementById('submitBtn').disabled = true; document.getElementById('editBtn').disabled = false;
       } else if (res.status === 'duplicate') {
-        msg('❌ Duplicate detected! This facility already submitted for Week ' + epiW + '. Use Edit Record.', 'e');
+        msg('❌ Duplicate detected! This facility already submitted.', 'e');
         isAlreadySubmitted = true;
         document.getElementById('lockedFacilityName').textContent = f;
         document.getElementById('facilityLockedMsg').classList.add('show');
-        document.getElementById('submitBtn').disabled = true;
-        document.getElementById('editBtn').disabled = false;
+        document.getElementById('submitBtn').disabled = true; document.getElementById('editBtn').disabled = false;
       } else {
         msg('Error: ' + res.message, 'e');
-        btn.disabled = false;
-        btn.textContent = isEditMode ? 'Update Report' : 'Submit Report';
+        btn.disabled = false; btn.textContent = isEditMode ? 'Update Report' : 'Submit Report';
       }
     })
     .catch(() => {
-      msg('Network error. Ensure script is deployed correctly.', 'e');
-      btn.disabled = false;
-      btn.textContent = isEditMode ? 'Update Report' : 'Submit Report';
+      msg('Network error.', 'e');
+      btn.disabled = false; btn.textContent = isEditMode ? 'Update Report' : 'Submit Report';
     });
 }
 
@@ -880,17 +710,14 @@ function viewData() {
   if (!currentWoredaId) return msg('Enter Woreda ID first', 'e');
   let f = document.getElementById('fs').value || '';
   
-  fetch(SCRIPT_API_URL + '?action=getData&woreda=' + encodeURIComponent(currentWoreda) + '&week=' + epiW + '&year=' + epiY + '&facility=' + encodeURIComponent(f))
+  fetch(SCRIPT_API_URL + '?action=getData&woreda=' + encodeURIComponent(submitWoreda) + '&week=' + epiW + '&year=' + epiY + '&facility=' + encodeURIComponent(f))
     .then(r => r.json())
     .then(res => {
       document.getElementById('viewTitle').textContent = (f || currentWoreda) + ' - Week ' + epiW + ' ' + epiY;
       if (res.headers && res.rows) {
         document.getElementById('viewHead').innerHTML = '<tr>' + res.headers.map(h => '<th>' + h + '</th>').join('') + '</tr>';
-        
         if (res.rows.length) {
-          document.getElementById('viewBody').innerHTML = res.rows.map(r => {
-            return '<tr>' + r.map(c => '<td>' + (c || '') + '</td>').join('') + '</tr>';
-          }).join('');
+          document.getElementById('viewBody').innerHTML = res.rows.map(r => '<tr>' + r.map(c => '<td>' + (c || '') + '</td>').join('') + '</tr>').join('');
         } else {
           document.getElementById('viewBody').innerHTML = '<tr><td colspan="100" style="text-align:center; padding:20px; color:#94a3b8;">No data found</td></tr>';
         }
@@ -903,23 +730,15 @@ function viewData() {
 function showExport() {
   if (!currentWoredaId) return msg('Enter Woreda ID first', 'e');
   let f = document.getElementById('fs').value || '';
-  window.open(SCRIPT_API_URL + '?action=exportCSV&woreda=' + encodeURIComponent(currentWoreda) + '&week=' + epiW + '&year=' + epiY + '&facility=' + encodeURIComponent(f), '_blank');
+  window.open(SCRIPT_API_URL + '?action=exportCSV&woreda=' + encodeURIComponent(submitWoreda) + '&week=' + epiW + '&year=' + epiY + '&facility=' + encodeURIComponent(f), '_blank');
 }
 
 function resetAll() {
-  sel = {};
-  renderTags();
-  renderST();
-  renderCards();
-  updateSections();
-  calculateAndValidate();
-  
+  sel = {}; renderTags(); renderST(); renderCards(); updateSections(); calculateAndValidate();
   document.getElementById('unusual_ev').value = '';
   document.querySelector('input[name="ct"][value="cases"]').checked = true;
   tog();
-  
-  isEditMode = false;
-  isAlreadySubmitted = false;
+  isEditMode = false; isAlreadySubmitted = false;
   document.getElementById('facilityLockedMsg').classList.remove('show');
   document.getElementById('editBtn').disabled = true;
   document.getElementById('submitBtn').textContent = 'Select Facility to Submit';
@@ -930,9 +749,7 @@ function msg(t, ty) {
   m.innerHTML = '<span>' + t + '</span>';
   m.className = 'msg ' + ty + ' show';
   clearTimeout(m._timeout);
-  m._timeout = setTimeout(() => {
-    m.className = 'msg ' + ty;
-  }, 4000);
+  m._timeout = setTimeout(() => { m.className = 'msg ' + ty; }, 4000);
 }
 
 window.addEventListener('DOMContentLoaded', init);
