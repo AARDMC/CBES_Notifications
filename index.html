@@ -271,7 +271,9 @@
 </div>
 
 <script>
-// Ensure you replace this with your latest Deployment URL:
+// =========================================================
+// API CONNECTION SETUP
+// =========================================================
 const SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwEWlUDyUQmQUT-5kDfgHnK3yy5_MAhuaz1IxZe7OoFR0iFYoTkBVsN9gBDN7hZbCYQ/exec";
 
 const DISEASES = [
@@ -362,14 +364,30 @@ function loadFacilities() {
           facList.push({ id: c[cid], zone: c[cz], woreda: c[cw], fac: c[cf] });
         }
       }
-      loadMetrics();
+      // On start, isolate to 0% because Woreda isn't selected
+      document.getElementById('agg_comp').textContent = '0%';
+      document.getElementById('agg_time').textContent = '0%';
+      document.getElementById('navGauge').style.setProperty('--comp', '0%');
+      document.getElementById('navCompText').textContent = '0%';
     })
     .catch(() => msg('Could not load facilities list.', 'e'));
 }
 
+// Strictly evaluates KPI for the single entered Woreda
 function loadMetrics() {
-  const expected = facList.length || 96;
-  fetch(SCRIPT_API_URL + '?action=getMetrics&week=' + epiW + '&year=' + epiY + '&expected=' + expected)
+  if (!submitWoreda || !currentWoredaId) {
+    document.getElementById('agg_comp').textContent = '0%';
+    document.getElementById('agg_time').textContent = '0%';
+    document.getElementById('navGauge').style.setProperty('--comp', '0%');
+    document.getElementById('navCompText').textContent = '0%';
+    return;
+  }
+  
+  let facs = facList.filter(f => f.id === currentWoredaId);
+  let expected = facs.length > 0 ? facs.length : 1;
+  let wParam = '&woreda=' + encodeURIComponent(submitWoreda);
+  
+  fetch(SCRIPT_API_URL + '?action=getMetrics&week=' + epiW + '&year=' + epiY + '&expected=' + expected + wParam)
     .then(r => r.json())
     .then(data => {
       if (data.status === 'success') {
@@ -464,17 +482,22 @@ function validateWoreda() {
   isEditMode = false; isAlreadySubmitted = false; sel = {};
   renderTags(); renderST(); renderCards(); updateSections();
   
-  if (!id) { hint.innerHTML = ''; return; }
+  if (!id) { 
+    hint.innerHTML = ''; submitWoreda = ''; currentWoredaId = '';
+    loadMetrics(); // Forces 0%
+    return; 
+  }
   
   let facs = facList.filter(f => f.id === id);
   if (facs.length) {
     hint.innerHTML = '✔ Valid Woreda'; hint.className = 'woreda-hint woreda-valid';
     currentZone = facs[0].zone; currentWoreda = facs[0].woreda; currentWoredaId = id;
     
-    // Auto format Woreda: "Addis Ketema" + "Woreda 01" -> "Addis_Ketema_Woreda1"
     let safeZ = currentZone.trim().replace(/\s+/g, '_');
     let safeW = currentWoreda.trim().replace(/Woreda\s*0*(\d+)/i, 'Woreda$1').replace(/\s+/g, '_');
     submitWoreda = safeZ + '_' + safeW;
+    
+    loadMetrics(); // Will correctly fetch KPI for just this Woreda
     
     document.getElementById('zf').value = currentZone;
     document.getElementById('wf').value = currentWoreda;
@@ -489,6 +512,8 @@ function validateWoreda() {
     if (facs.length === 1) { document.getElementById('fs').value = facs[0].fac; onFacilityChange(); }
   } else {
     hint.innerHTML = '✖ Not found'; hint.className = 'woreda-hint woreda-invalid';
+    submitWoreda = ''; currentWoredaId = '';
+    loadMetrics();
   }
 }
 
@@ -654,7 +679,7 @@ function sub() {
       if (res.status === 'success') {
         msg(isEditMode ? '✓ Record updated!' : '✓ Submitted successfully!', 's');
         if (typeof confetti === 'function') confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
-        loadMetrics();
+        loadMetrics(); // Will calculate based ONLY on current Woreda
         isAlreadySubmitted = true; isEditMode = false; lastSubmittedFacility = f;
         document.getElementById('lockedFacilityName').textContent = f;
         document.getElementById('facilityLockedMsg').classList.add('show');
@@ -725,7 +750,7 @@ function bulkZeroSubmit() {
         if(res.status === 'success') {
           msg(`✓ Successfully auto-populated ${missing.length} missing reports!`, 's');
           if (typeof confetti === 'function') confetti({ particleCount: 200, spread: 100, origin: { y: 0.5 } });
-          loadMetrics();
+          loadMetrics(); // Will remain correct since it uses active Woreda scope
         } else msg('Error: ' + res.message, 'e');
         btn.textContent = '🪄 Auto Populate'; btn.disabled = false;
       });
@@ -741,9 +766,13 @@ function resetAll() {
   document.querySelector('input[name="ct"][value="cases"]').checked = true;
   tog();
   isEditMode = false; isAlreadySubmitted = false;
+  submitWoreda = ''; currentWoredaId = '';
   document.getElementById('facilityLockedMsg').classList.remove('show');
   document.getElementById('editBtn').disabled = true;
   document.getElementById('submitBtn').textContent = 'Select Facility to Submit';
+  
+  // Forces gauge to 0% since no Woreda is selected
+  loadMetrics(); 
 }
 
 function msg(t, ty) {
