@@ -26,9 +26,8 @@
     .info-bar div { display: flex; flex-direction: row; align-items: center; gap: 8px; white-space: nowrap; }
     .info-bar span { background: rgba(255,255,255,0.25); color: white; padding: 4px 12px; border-radius: 6px; font-size: 14px; }
     
-    /* New Bulk Zero Button */
-    .magic-btn { background: #3b82f6; border: 1px solid #2563eb; color: white; padding: 4px 12px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
-    .magic-btn:hover { background: #2563eb; }
+    .magic-btn { background: #f59e0b; border: 1px solid #d97706; color: white; padding: 4px 12px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
+    .magic-btn:hover { background: #d97706; }
     
     .reset-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.4); color: white; padding: 4px 12px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
     .reset-btn:hover { background: rgba(255,255,255,0.25); }
@@ -126,7 +125,7 @@
       <div>Year <span id="lbl_y">—</span></div>
       <div>Month <span id="lbl_m">—</span></div>
       <div>Epi Week <span id="lbl_w">—</span></div>
-      <button onclick="bulkZeroSubmit()" class="magic-btn" id="bulkZeroBtn">🪄 Auto-Fill Zeros (Missing)</button>
+      <button onclick="bulkZeroSubmit()" class="magic-btn" id="bulkZeroBtn">🪄 Auto Populate</button>
       <button onclick="resetAll()" class="reset-btn">Reset Form</button>
     </div>
 
@@ -272,9 +271,7 @@
 </div>
 
 <script>
-// =========================================================
-// API CONNECTION SETUP
-// =========================================================
+// Ensure you replace this with your latest Deployment URL:
 const SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwEWlUDyUQmQUT-5kDfgHnK3yy5_MAhuaz1IxZe7OoFR0iFYoTkBVsN9gBDN7hZbCYQ/exec";
 
 const DISEASES = [
@@ -371,7 +368,6 @@ function loadFacilities() {
 }
 
 function loadMetrics() {
-  // Pass the exact length of facilities to calculate true percentage
   const expected = facList.length || 96;
   fetch(SCRIPT_API_URL + '?action=getMetrics&week=' + epiW + '&year=' + epiY + '&expected=' + expected)
     .then(r => r.json())
@@ -424,7 +420,6 @@ function renderCards() {
   
   c.innerHTML = k.map(x => {
     let d = DISEASES.find(y => y.k === x);
-    // Note the added oninput regex to aggressively strip anything but numbers
     let t30 = d.t30 ? `<div class="f-col"><label>Done within 30 min</label><input type="number" step="1" id="${d.k}_30m" value="0" oninput="this.value=this.value.replace(/[^0-9]/g,''); calculateAndValidate()"></div>` : `<input type="hidden" id="${d.k}_30m" value="0">`;
       
     return `<div class="card">
@@ -476,8 +471,7 @@ function validateWoreda() {
     hint.innerHTML = '✔ Valid Woreda'; hint.className = 'woreda-hint woreda-valid';
     currentZone = facs[0].zone; currentWoreda = facs[0].woreda; currentWoredaId = id;
     
-    // NEW LOGIC: Format Woreda string for database insertion precisely as requested.
-    // E.g. Zone="Addis Ketema", Woreda="Woreda 01" --> "Addis_Ketema_Woreda1"
+    // Auto format Woreda: "Addis Ketema" + "Woreda 01" -> "Addis_Ketema_Woreda1"
     let safeZ = currentZone.trim().replace(/\s+/g, '_');
     let safeW = currentWoreda.trim().replace(/Woreda\s*0*(\d+)/i, 'Woreda$1').replace(/\s+/g, '_');
     submitWoreda = safeZ + '_' + safeW;
@@ -614,7 +608,6 @@ function calculateAndValidate() {
   let isNoCases = document.querySelector('input[name="ct"]:checked').value === 'nocases';
   let keysCount = Object.keys(sel).length;
   
-  // Submit ONLY Active IF: Logic is valid AND either it's a 'No Notification' report OR (User checked a tag AND entered a number > 0)
   btn.disabled = !(allValid && (isNoCases || (keysCount > 0 && hasNonZero)));
 }
 
@@ -627,7 +620,6 @@ function tog() {
 function sub() {
   let f = document.getElementById('fs').value;
   if (!f) return msg('Select a facility', 'e');
-  
   if (!isEditMode && isAlreadySubmitted) return msg('❌ This facility has already submitted. Use Edit Record instead.', 'e');
   
   let no = document.querySelector('input[name="ct"]:checked').value === 'nocases';
@@ -697,15 +689,13 @@ function showExport() {
   window.open(SCRIPT_API_URL + '?action=exportCSV&woreda=' + encodeURIComponent(submitWoreda) + '&week=' + epiW + '&year=' + epiY + '&facility=' + encodeURIComponent(f), '_blank');
 }
 
-// 🪄 NEW FEATURE: Bulk submit missing facilities for the week as Zero Notifications
 function bulkZeroSubmit() {
   if(facList.length === 0) return msg('Please wait for facilities list to load.', 'e');
-  if(!confirm(`WARNING:\n\nThis will auto-generate and submit "0 Notifications" for ALL facilities that have not reported yet for Week ${epiW}. Are you sure you want to proceed?`)) return;
+  if(!confirm(`WARNING:\n\nThis will auto-generate and submit missing facilities for Week ${epiW} as 0. Manual submissions will NOT be overwritten. Proceed?`)) return;
   
   let btn = document.getElementById('bulkZeroBtn');
-  btn.disabled = true; btn.textContent = '⏳ Checking missing...';
+  btn.disabled = true; btn.textContent = '⏳ Processing...';
   
-  // First, check who has already submitted this week to prevent duplicates
   fetch(SCRIPT_API_URL + '?action=getData&week=' + epiW + '&year=' + epiY + '&woreda=')
     .then(r => r.json())
     .then(res => {
@@ -716,13 +706,12 @@ function bulkZeroSubmit() {
       
       let missing = facList.filter(f => !submittedSet.has(f.fac.toLowerCase()));
       if (missing.length === 0) {
-        btn.textContent = '🪄 Auto-Fill Zeros (Missing)'; btn.disabled = false;
+        btn.textContent = '🪄 Auto Populate'; btn.disabled = false;
         return msg('All facilities have already submitted this week!', 's');
       }
       
-      btn.textContent = '🚀 Submitting ' + missing.length + ' reports...';
+      btn.textContent = '🚀 Submitting ' + missing.length + '...';
       
-      // Map the missing facilities into the payload with precisely formatted Woredas
       let payload = missing.map(f => {
         let safeZ = f.zone.trim().replace(/\s+/g, '_');
         let safeW = f.woreda.trim().replace(/Woreda\s*0*(\d+)/i, 'Woreda$1').replace(/\s+/g, '_');
@@ -731,20 +720,18 @@ function bulkZeroSubmit() {
       
       fetch(SCRIPT_API_URL, {
         method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({
-          action: 'bulkZeroSubmission', Year: epiY, Month: epiM, EpiWeek: epiW, Facilities: payload
-        })
+        body: JSON.stringify({ action: 'bulkZeroSubmission', Year: epiY, Month: epiM, EpiWeek: epiW, Facilities: payload })
       }).then(r => r.json()).then(res => {
         if(res.status === 'success') {
-          msg(`✓ Successfully auto-filled ${missing.length} zero reports!`, 's');
+          msg(`✓ Successfully auto-populated ${missing.length} missing reports!`, 's');
           if (typeof confetti === 'function') confetti({ particleCount: 200, spread: 100, origin: { y: 0.5 } });
           loadMetrics();
         } else msg('Error: ' + res.message, 'e');
-        btn.textContent = '🪄 Auto-Fill Zeros (Missing)'; btn.disabled = false;
+        btn.textContent = '🪄 Auto Populate'; btn.disabled = false;
       });
     }).catch(e => {
        msg('Network error during bulk check.', 'e');
-       btn.textContent = '🪄 Auto-Fill Zeros (Missing)'; btn.disabled = false;
+       btn.textContent = '🪄 Auto Populate'; btn.disabled = false;
     });
 }
 
