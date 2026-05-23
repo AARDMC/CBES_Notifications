@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Addis Ababa PHEM - CBES Notifications Form</title>
-  
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2310b981' stroke-width='2.5'><path d='M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2'></path><circle cx='9' cy='7' r='4'></circle><path d='M23 21v-2a4 4 0 0 0-3-3.87'></path><path d='M16 3.13a4 4 0 0 1 0 7.75'></path></svg>">
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
   
@@ -26,6 +25,11 @@
     .info-bar { display: flex; flex-wrap: wrap; justify-content: space-evenly; align-items: center; background: linear-gradient(to right, #059669, #10b981); color: white; padding: 6px 12px; border-radius: 10px; margin-bottom: 12px; font-size: 14px; font-weight: 600; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); gap: 10px; }
     .info-bar div { display: flex; flex-direction: row; align-items: center; gap: 8px; white-space: nowrap; }
     .info-bar span { background: rgba(255,255,255,0.25); color: white; padding: 4px 12px; border-radius: 6px; font-size: 14px; }
+    
+    /* New Bulk Zero Button */
+    .magic-btn { background: #3b82f6; border: 1px solid #2563eb; color: white; padding: 4px 12px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
+    .magic-btn:hover { background: #2563eb; }
+    
     .reset-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.4); color: white; padding: 4px 12px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
     .reset-btn:hover { background: rgba(255,255,255,0.25); }
     .facility-sticky { position: sticky; top: 0; z-index: 50; background: white; padding: 15px; margin: -15px -15px 15px -15px; border-bottom: 1px solid #cbd5e1; box-shadow: 0 4px 8px -2px rgba(0,0,0,0.08); }
@@ -122,6 +126,7 @@
       <div>Year <span id="lbl_y">—</span></div>
       <div>Month <span id="lbl_m">—</span></div>
       <div>Epi Week <span id="lbl_w">—</span></div>
+      <button onclick="bulkZeroSubmit()" class="magic-btn" id="bulkZeroBtn">🪄 Auto-Fill Zeros (Missing)</button>
       <button onclick="resetAll()" class="reset-btn">Reset Form</button>
     </div>
 
@@ -156,7 +161,6 @@
 
     <div class="toggle-row">
       <span style="font-weight:700">Reporting:</span>
-      <!-- Radio button labels updated -->
       <label><input type="radio" name="ct" value="cases" checked onchange="tog()">Notifications</label>
       <label><input type="radio" name="ct" value="nocases" onchange="tog()">No Notifications</label>
     </div>
@@ -188,11 +192,11 @@
             <div class="f-row">
               <div class="f-col wide">
                 <label>Notifs received from 6406</label>
-                <input type="number" id="rumor_rcv" value="0">
+                <input type="number" id="rumor_rcv" value="0" step="1" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
               </div>
               <div class="f-col wide">
                 <label>Rumors investigated from 6406</label>
-                <input type="number" id="rumor_inv" value="0">
+                <input type="number" id="rumor_inv" value="0" step="1" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
               </div>
             </div>
             <div style="margin-top:8px">
@@ -268,7 +272,9 @@
 </div>
 
 <script>
-// Ensure you replace this with your latest Deployment URL:
+// =========================================================
+// API CONNECTION SETUP
+// =========================================================
 const SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwEWlUDyUQmQUT-5kDfgHnK3yy5_MAhuaz1IxZe7OoFR0iFYoTkBVsN9gBDN7hZbCYQ/exec";
 
 const DISEASES = [
@@ -310,39 +316,30 @@ function init() {
   try {
     let t = new Date(), wd = (t.getDay() + 6) % 7 + 1, th = new Date(t);
     th.setDate(t.getDate() - wd - 3);
-    
-    epiY = th.getFullYear();
-    epiM = MONTHS[th.getMonth()];
-    
+    epiY = th.getFullYear(); epiM = MONTHS[th.getMonth()];
     let j1 = new Date(epiY, 0, 1);
     epiW = Math.floor((Math.floor((th - j1) / 86400000) + 10) / 7);
-    if (epiW < 1) epiW = 1;
-    if (epiW > 52) epiW = 52;
+    if (epiW < 1) epiW = 1; if (epiW > 52) epiW = 52;
     
     document.getElementById('lbl_y').textContent = epiY;
     document.getElementById('lbl_m').textContent = epiM;
     document.getElementById('lbl_w').textContent = epiW;
     
-    renderTags(); loadFacilities(); loadMetrics();
-  } catch (e) {
-    msg('Initialization error. Check console.', 'e');
-    console.error(e);
-  }
+    renderTags(); loadFacilities();
+  } catch (e) { console.error(e); }
 }
 
 function parseCSV(s) {
   let r = [], row = [], f = '', q = false;
   for (let i = 0; i < s.length; i++) {
     let c = s[i], n = s[i + 1];
-    if (q) {
-      if (c === '"') { if (n === '"') { f += '"'; i++; } else q = false; } else f += c;
-    } else {
+    if (q) { if (c === '"') { if (n === '"') { f += '"'; i++; } else q = false; } else f += c; } 
+    else {
       if (c === '"') q = true;
       else if (c === ',') { row.push(f.trim()); f = ''; }
       else if (c === '\n' || c === '\r') {
         if (c === '\r' && n === '\n') i++;
-        row.push(f.trim());
-        if (row.some(x => x !== '')) r.push(row);
+        row.push(f.trim()); if (row.some(x => x !== '')) r.push(row);
         row = []; f = '';
       } else f += c;
     }
@@ -368,12 +365,15 @@ function loadFacilities() {
           facList.push({ id: c[cid], zone: c[cz], woreda: c[cw], fac: c[cf] });
         }
       }
+      loadMetrics();
     })
     .catch(() => msg('Could not load facilities list.', 'e'));
 }
 
 function loadMetrics() {
-  fetch(SCRIPT_API_URL + '?action=getMetrics&week=' + epiW + '&year=' + epiY)
+  // Pass the exact length of facilities to calculate true percentage
+  const expected = facList.length || 96;
+  fetch(SCRIPT_API_URL + '?action=getMetrics&week=' + epiW + '&year=' + epiY + '&expected=' + expected)
     .then(r => r.json())
     .then(data => {
       if (data.status === 'success') {
@@ -383,8 +383,7 @@ function loadMetrics() {
         document.getElementById('navGauge').style.setProperty('--comp', comp + '%');
         document.getElementById('navCompText').textContent = comp + '%';
       }
-    })
-    .catch(err => console.error("Metric fetch failed.", err));
+    }).catch(err => console.error("Metric fetch failed.", err));
 }
 
 function renderTags() {
@@ -425,26 +424,27 @@ function renderCards() {
   
   c.innerHTML = k.map(x => {
     let d = DISEASES.find(y => y.k === x);
-    let t30 = d.t30 ? '<div class="f-col"><label>Done within 30 min</label><input type="number" id="' + d.k + '_30m" value="0" oninput="calculateAndValidate()"></div>' : '<input type="hidden" id="' + d.k + '_30m" value="0">';
+    // Note the added oninput regex to aggressively strip anything but numbers
+    let t30 = d.t30 ? `<div class="f-col"><label>Done within 30 min</label><input type="number" step="1" id="${d.k}_30m" value="0" oninput="this.value=this.value.replace(/[^0-9]/g,''); calculateAndValidate()"></div>` : `<input type="hidden" id="${d.k}_30m" value="0">`;
       
-    return '<div class="card">' +
-             '<div class="card-header" onclick="this.nextElementSibling.classList.toggle(\'hide\')">' +
-               '<span>' + d.n + '</span>' +
-             '</div>' +
-             '<div class="card-body">' +
-               '<div class="f-row">' +
-                 '<div class="f-col wide">' +
-                   '<label>Notifications from community</label>' +
-                   '<input type="number" id="' + d.k + '_comm" value="0" oninput="calculateAndValidate()">' +
-                 '</div>' +
-                 '<div class="f-col wide">' +
-                   '<label>Fulfilling case definition</label>' +
-                   '<input type="number" id="' + d.k + '_def" value="0" oninput="calculateAndValidate()">' +
-                 '</div>' + t30 +
-               '</div>' +
-               '<div class="error-msg" id="' + d.k + '_err">Error: Community ≥ Case Def' + (d.t30 ? ' ≥ 30 Min' : '') + '</div>' +
-             '</div>' +
-           '</div>';
+    return `<div class="card">
+             <div class="card-header" onclick="this.nextElementSibling.classList.toggle('hide')">
+               <span>${d.n}</span>
+             </div>
+             <div class="card-body">
+               <div class="f-row">
+                 <div class="f-col wide">
+                   <label>Notifications from community</label>
+                   <input type="number" step="1" id="${d.k}_comm" value="0" oninput="this.value=this.value.replace(/[^0-9]/g,''); calculateAndValidate()">
+                 </div>
+                 <div class="f-col wide">
+                   <label>Fulfilling case definition</label>
+                   <input type="number" step="1" id="${d.k}_def" value="0" oninput="this.value=this.value.replace(/[^0-9]/g,''); calculateAndValidate()">
+                 </div>${t30}
+               </div>
+               <div class="error-msg" id="${d.k}_err">Error: Community ≥ Case Def${d.t30 ? ' ≥ 30 Min' : ''}</div>
+             </div>
+           </div>`;
   }).join('');
 }
 
@@ -473,14 +473,14 @@ function validateWoreda() {
   
   let facs = facList.filter(f => f.id === id);
   if (facs.length) {
-    hint.innerHTML = '✔ Valid Woreda';
-    hint.className = 'woreda-hint woreda-valid';
-    currentZone = facs[0].zone;
-    currentWoreda = facs[0].woreda;
-    currentWoredaId = id;
+    hint.innerHTML = '✔ Valid Woreda'; hint.className = 'woreda-hint woreda-valid';
+    currentZone = facs[0].zone; currentWoreda = facs[0].woreda; currentWoredaId = id;
     
-    // Auto-format Woreda string for DB submission (e.g., "Arada_Woreda1")
-    submitWoreda = currentZone.trim() + '_' + currentWoreda.trim().replace(/Woreda\s*0*(\d+)/i, 'Woreda$1').replace(/\s+/g, '');
+    // NEW LOGIC: Format Woreda string for database insertion precisely as requested.
+    // E.g. Zone="Addis Ketema", Woreda="Woreda 01" --> "Addis_Ketema_Woreda1"
+    let safeZ = currentZone.trim().replace(/\s+/g, '_');
+    let safeW = currentWoreda.trim().replace(/Woreda\s*0*(\d+)/i, 'Woreda$1').replace(/\s+/g, '_');
+    submitWoreda = safeZ + '_' + safeW;
     
     document.getElementById('zf').value = currentZone;
     document.getElementById('wf').value = currentWoreda;
@@ -492,13 +492,9 @@ function validateWoreda() {
     });
     
     document.getElementById('fs').disabled = false;
-    if (facs.length === 1) {
-      document.getElementById('fs').value = facs[0].fac;
-      onFacilityChange();
-    }
+    if (facs.length === 1) { document.getElementById('fs').value = facs[0].fac; onFacilityChange(); }
   } else {
-    hint.innerHTML = '✖ Not found';
-    hint.className = 'woreda-hint woreda-invalid';
+    hint.innerHTML = '✖ Not found'; hint.className = 'woreda-hint woreda-invalid';
   }
 }
 
@@ -512,10 +508,8 @@ function onFacilityChange() {
   document.getElementById('submitBtn').disabled = false;
   document.getElementById('submitBtn').textContent = 'Submit Report';
   document.getElementById('editBtn').disabled = true;
-  
   if (!fname) return;
   
-  // Checking duplicate using the securely formatted submitWoreda
   fetch(SCRIPT_API_URL + '?action=checkDuplicate&zone=' + encodeURIComponent(currentZone) + '&woreda=' + encodeURIComponent(submitWoreda) + '&facility=' + encodeURIComponent(fname) + '&week=' + epiW + '&year=' + epiY)
     .then(r => r.json())
     .then(res => {
@@ -539,14 +533,10 @@ function loadExistingRecord(fname) {
     .then(r => r.json())
     .then(res => {
       if (res.status === 'success' && res.recordData) {
-        sel = {};
-        let rd = res.recordData;
-        
+        sel = {}; let rd = res.recordData;
         DISEASES.forEach(d => {
           let obj = rd[d.k];
-          if (obj && (obj.comm > 0 || obj.def > 0 || (d.t30 && obj.t30 > 0))) {
-            sel[d.k] = {}; // Auto-select tag if > 0
-          }
+          if (obj && (obj.comm > 0 || obj.def > 0 || (d.t30 && obj.t30 > 0))) sel[d.k] = {};
         });
         
         renderTags(); renderST(); renderCards(); updateSections();
@@ -560,11 +550,9 @@ function loadExistingRecord(fname) {
               if (d.t30) document.getElementById(d.k + '_30m').value = obj.t30 || 0;
             }
           });
-          
           document.getElementById('rumor_rcv').value = rd.rumors.received || 0;
           document.getElementById('rumor_inv').value = rd.rumors.investigated || 0;
           document.getElementById('unusual_ev').value = rd.rumors.unusual || '';
-          
           calculateAndValidate();
         }, 150);
       }
@@ -626,7 +614,7 @@ function calculateAndValidate() {
   let isNoCases = document.querySelector('input[name="ct"]:checked').value === 'nocases';
   let keysCount = Object.keys(sel).length;
   
-  // Submit Active ONLY if Valid AND (No Notifications OR (Tags Selected AND Has values > 0))
+  // Submit ONLY Active IF: Logic is valid AND either it's a 'No Notification' report OR (User checked a tag AND entered a number > 0)
   btn.disabled = !(allValid && (isNoCases || (keysCount > 0 && hasNonZero)));
 }
 
@@ -640,23 +628,13 @@ function sub() {
   let f = document.getElementById('fs').value;
   if (!f) return msg('Select a facility', 'e');
   
-  if (!isEditMode && isAlreadySubmitted) {
-    return msg('❌ This facility has already submitted for this week. Use Edit Record instead.', 'e');
-  }
+  if (!isEditMode && isAlreadySubmitted) return msg('❌ This facility has already submitted. Use Edit Record instead.', 'e');
   
   let no = document.querySelector('input[name="ct"]:checked').value === 'nocases';
-  
   let p = {
     action: isEditMode ? 'editRecord' : 'submitCommunityData',
-    Region: 'Addis Ababa',
-    SubCity: currentZone,
-    Woreda: submitWoreda, // Sent securely formatted to database
-    FacilityName: f,
-    Year: epiY,
-    Month: epiM,
-    EpiWeek: epiW,
-    NoCases: no ? 'true' : 'false',
-    Data: {}
+    Region: 'Addis Ababa', SubCity: currentZone, Woreda: submitWoreda, FacilityName: f,
+    Year: epiY, Month: epiM, EpiWeek: epiW, NoCases: no ? 'true' : 'false', Data: {}
   };
   
   if (!no) {
@@ -689,21 +667,11 @@ function sub() {
         document.getElementById('lockedFacilityName').textContent = f;
         document.getElementById('facilityLockedMsg').classList.add('show');
         document.getElementById('submitBtn').disabled = true; document.getElementById('editBtn').disabled = false;
-      } else if (res.status === 'duplicate') {
-        msg('❌ Duplicate detected! This facility already submitted.', 'e');
-        isAlreadySubmitted = true;
-        document.getElementById('lockedFacilityName').textContent = f;
-        document.getElementById('facilityLockedMsg').classList.add('show');
-        document.getElementById('submitBtn').disabled = true; document.getElementById('editBtn').disabled = false;
       } else {
         msg('Error: ' + res.message, 'e');
         btn.disabled = false; btn.textContent = isEditMode ? 'Update Report' : 'Submit Report';
       }
-    })
-    .catch(() => {
-      msg('Network error.', 'e');
-      btn.disabled = false; btn.textContent = isEditMode ? 'Update Report' : 'Submit Report';
-    });
+    }).catch(() => { msg('Network error.', 'e'); btn.disabled = false; btn.textContent = isEditMode ? 'Update Report' : 'Submit Report'; });
 }
 
 function viewData() {
@@ -716,21 +684,68 @@ function viewData() {
       document.getElementById('viewTitle').textContent = (f || currentWoreda) + ' - Week ' + epiW + ' ' + epiY;
       if (res.headers && res.rows) {
         document.getElementById('viewHead').innerHTML = '<tr>' + res.headers.map(h => '<th>' + h + '</th>').join('') + '</tr>';
-        if (res.rows.length) {
-          document.getElementById('viewBody').innerHTML = res.rows.map(r => '<tr>' + r.map(c => '<td>' + (c || '') + '</td>').join('') + '</tr>').join('');
-        } else {
-          document.getElementById('viewBody').innerHTML = '<tr><td colspan="100" style="text-align:center; padding:20px; color:#94a3b8;">No data found</td></tr>';
-        }
+        if (res.rows.length) document.getElementById('viewBody').innerHTML = res.rows.map(r => '<tr>' + r.map(c => '<td>' + (c || '') + '</td>').join('') + '</tr>').join('');
+        else document.getElementById('viewBody').innerHTML = '<tr><td colspan="100" style="text-align:center; padding:20px; color:#94a3b8;">No data found</td></tr>';
       }
       document.getElementById('viewModal').classList.add('show');
-    })
-    .catch(() => msg('Could not load data', 'e'));
+    }).catch(() => msg('Could not load data', 'e'));
 }
 
 function showExport() {
   if (!currentWoredaId) return msg('Enter Woreda ID first', 'e');
   let f = document.getElementById('fs').value || '';
   window.open(SCRIPT_API_URL + '?action=exportCSV&woreda=' + encodeURIComponent(submitWoreda) + '&week=' + epiW + '&year=' + epiY + '&facility=' + encodeURIComponent(f), '_blank');
+}
+
+// 🪄 NEW FEATURE: Bulk submit missing facilities for the week as Zero Notifications
+function bulkZeroSubmit() {
+  if(facList.length === 0) return msg('Please wait for facilities list to load.', 'e');
+  if(!confirm(`WARNING:\n\nThis will auto-generate and submit "0 Notifications" for ALL facilities that have not reported yet for Week ${epiW}. Are you sure you want to proceed?`)) return;
+  
+  let btn = document.getElementById('bulkZeroBtn');
+  btn.disabled = true; btn.textContent = '⏳ Checking missing...';
+  
+  // First, check who has already submitted this week to prevent duplicates
+  fetch(SCRIPT_API_URL + '?action=getData&week=' + epiW + '&year=' + epiY + '&woreda=')
+    .then(r => r.json())
+    .then(res => {
+      let submittedSet = new Set();
+      if(res.rows && res.rows.length > 0) {
+        res.rows.forEach(r => { submittedSet.add(String(r[3]).trim().toLowerCase()); });
+      }
+      
+      let missing = facList.filter(f => !submittedSet.has(f.fac.toLowerCase()));
+      if (missing.length === 0) {
+        btn.textContent = '🪄 Auto-Fill Zeros (Missing)'; btn.disabled = false;
+        return msg('All facilities have already submitted this week!', 's');
+      }
+      
+      btn.textContent = '🚀 Submitting ' + missing.length + ' reports...';
+      
+      // Map the missing facilities into the payload with precisely formatted Woredas
+      let payload = missing.map(f => {
+        let safeZ = f.zone.trim().replace(/\s+/g, '_');
+        let safeW = f.woreda.trim().replace(/Woreda\s*0*(\d+)/i, 'Woreda$1').replace(/\s+/g, '_');
+        return { zone: f.zone, woreda: (safeZ + '_' + safeW), fac: f.fac };
+      });
+      
+      fetch(SCRIPT_API_URL, {
+        method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          action: 'bulkZeroSubmission', Year: epiY, Month: epiM, EpiWeek: epiW, Facilities: payload
+        })
+      }).then(r => r.json()).then(res => {
+        if(res.status === 'success') {
+          msg(`✓ Successfully auto-filled ${missing.length} zero reports!`, 's');
+          if (typeof confetti === 'function') confetti({ particleCount: 200, spread: 100, origin: { y: 0.5 } });
+          loadMetrics();
+        } else msg('Error: ' + res.message, 'e');
+        btn.textContent = '🪄 Auto-Fill Zeros (Missing)'; btn.disabled = false;
+      });
+    }).catch(e => {
+       msg('Network error during bulk check.', 'e');
+       btn.textContent = '🪄 Auto-Fill Zeros (Missing)'; btn.disabled = false;
+    });
 }
 
 function resetAll() {
