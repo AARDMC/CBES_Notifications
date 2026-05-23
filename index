@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Addis Ababa PHEM - Community Notifications Form</title>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:Arial,sans-serif;background:#f0f4ff;padding:10px;font-size:16px;color:#1e293b}
+    
+    .container{max-width:950px;margin:0 auto;background:white;border-radius:12px;padding:0;box-shadow:0 2px 12px rgba(0,0,0,0.08);}
+    
+    .navbar{background:linear-gradient(135deg,#1e3a5f 0%,#2d5a87 30%,#4f46e5 60%,#7c3aed 100%);padding:16px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;border-radius:12px 12px 0 0;}
+    
+    .navbar .nav-logo{background:rgba(255,255,255,0.2);width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:white;flex-shrink:0;backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.3)}
+    
+    .navbar .nav-title-group{flex:1;min-width:200px}
+    .navbar .nav-title{font-size:19px;font-weight:800;color:white;line-height:1.2;text-shadow:0 1px 3px rgba(0,0,0,0.2)}
+    .navbar .nav-subtitle{font-size:13px;color:rgba(255,255,255,0.85);font-weight:500;margin-top:2px}
+    
+    .content{padding:15px}
+    
+    .info-bar{display:flex;flex-wrap:wrap;justify-content:space-evenly;align-items:center;background:linear-gradient(to right, #4f46e5, #7c3aed);color:white;padding:6px 12px;border-radius:10px;margin-bottom:12px;font-size:14px;font-weight:600;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);gap:10px;}
+    .info-bar div{display:flex;flex-direction:row;align-items:center;gap:8px;white-space:nowrap;}
+    .info-bar span{background:rgba(255,255,255,0.25);color:white;padding:4px 12px;border-radius:6px;font-size:14px;box-shadow:0 1px 2px rgba(0,0,0,0.1)}
+    
+    .facility-sticky {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: #ffffff;
+      padding: 15px;
+      margin: -15px -15px 15px -15px;
+      border-bottom: 1px solid #cbd5e1;
+      box-shadow: 0 4px 8px -2px rgba(0,0,0,0.08);
+    }
+    
+    .row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px}
+    .col{flex:1 1 150px;min-width:120px}
+    .col label{display:block;font-size:12px;font-weight:700;text-transform:uppercase;color:#475569;margin-bottom:4px}
+    .col select,.col input{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:6px;font-size:15px;background:white}
+    .col input:disabled,.col select:disabled{background:#f1f5f9; cursor:not-allowed;}
+    .hint{font-size:12px;margin-top:3px;display:flex;align-items:center;gap:4px;} 
+    .hint-valid{color:#10b981} .hint-invalid{color:#ef4444}
+    
+    .cards{margin:12px 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px;}
+    .card{background:white;border:1px solid #cbd5e1;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.05)}
+    .card-header{padding:12px 16px;background:linear-gradient(135deg, #1e3a5f, #2d5a87);color:white;font-weight:700;font-size:15px}
+    .card-body{padding:12px 16px; background:#f8fafc;}
+    
+    .f-row{display:flex;flex-direction:column;gap:8px}
+    .f-col{display:flex; justify-content:space-between; align-items:center;}
+    .f-col label{font-size:12px;font-weight:700;color:#475569;flex:1;}
+    .f-col input{width:80px;padding:6px;border:1px solid #cbd5e1;border-radius:4px;font-size:14px;text-align:center}
+    .f-col input[readonly]{background:#e2e8f0;font-weight:700; border:none;}
+    .f-col input.input-error { border-color: #ef4444; background: #fef2f2; color:#ef4444; font-weight:bold;}
+    
+    .error-msg { color: #ef4444; font-size: 11px; font-weight: 700; margin-top: 6px; display: none; background:#fef2f2; padding:6px; border-radius:4px; border:1px solid #fecaca;}
+    
+    .section-title { font-size: 16px; font-weight: 800; color: #1e293b; margin: 20px 0 10px 0; padding-bottom: 5px; border-bottom: 2px solid #e2e8f0;}
+
+    .rumor-card { grid-column: 1 / -1; background:#eff6ff; border-color:#93c5fd; }
+    .rumor-card .card-header { background:linear-gradient(135deg, #2563eb, #3b82f6); }
+    
+    .totals-card { grid-column: 1 / -1; background:#f0fdfa; border-color:#5eead4; }
+    .totals-card .card-header { background:linear-gradient(135deg, #0f766e, #0d9488); }
+    .totals-card input { font-size:16px; width:100px; background:#ccfbf1!important; color:#0f766e;}
+    
+    .btns{display:flex;gap:10px;margin-top:20px}
+    .btn{flex:1;padding:14px;border-radius:8px;border:none;background:#4f46e5;color:white;font-weight:800;font-size:16px;cursor:pointer;transition:0.2s}
+    .btn:hover{background:#4338ca}
+    .btn:disabled{opacity:0.5;cursor:not-allowed}
+
+    .msg {
+      position: fixed; top: 25px; left: 50%; transform: translateX(-50%) translateY(-30px);
+      z-index: 99999; padding: 12px 24px; border-radius: 50px; font-size: 15px; font-weight: 900;
+      display: flex; align-items: center; gap: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      opacity: 0; visibility: hidden; transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      color: white; pointer-events: none;
+    }
+    .msg.show { transform: translateX(-50%) translateY(0); opacity: 1; visibility: visible; }
+    .msg.s { background: linear-gradient(135deg, #059669, #10b981); border: 2px solid #34d399; }
+    .msg.e { background: linear-gradient(135deg, #dc2626, #ef4444); border: 2px solid #f87171; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="navbar">
+    <div class="nav-logo">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+    </div>
+    <div class="nav-title-group">
+      <div class="nav-title">Community Notifications Form</div>
+      <div class="nav-subtitle">Public Health Centers - Addis Ababa</div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="info-bar">
+        <div>Year <span id="lbl_y">—</span></div>
+        <div>Month <span id="lbl_m">—</span></div>
+        <div>Epi Week <span id="lbl_w">—</span></div>
+    </div>
+
+    <div class="facility-sticky">
+      <div class="row">
+        <div class="col">
+          <label>Woreda ID</label>
+          <input type="text" id="woredaInput" placeholder="Type Woreda ID..." oninput="validateWoreda()" autocomplete="off">
+          <div class="hint" id="woredaHint">Type a valid Woreda ID</div>
+        </div>
+        <div class="col"><label>Sub City / Zone</label><input id="zf" disabled placeholder="Auto populated"></div>
+        <div class="col"><label>Woreda</label><input id="wf" disabled placeholder="Auto populated"></div>
+        <div class="col">
+          <label>Health Center (Public Only)</label>
+          <select id="fs" disabled onchange="onFacilityChange()">
+            <option value="">Select Facility</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div id="formBody" style="display:none;">
+      
+      <div class="section-title">Reportable Diseases & Conditions</div>
+      <div class="cards" id="diseaseCards"></div>
+
+      <div class="section-title">Rumors & Unusual Events</div>
+      <div class="cards">
+        <div class="card rumor-card">
+          <div class="card-header">Community Rumors & Events</div>
+          <div class="card-body">
+            <div class="f-row">
+              <div class="f-col">
+                <label>Notifications/rumors received from toll-free 6406</label>
+                <input type="number" id="rumor_rcv" value="0" min="0" step="1">
+              </div>
+              <div class="f-col">
+                <label>Rumors investigated from 6406</label>
+                <input type="number" id="rumor_inv" value="0" min="0" step="1">
+              </div>
+              <div class="f-col" style="flex-direction:column; align-items:flex-start; gap:6px;">
+                <label style="width:100%;">Unusual health events (2+ severe illnesses or deaths in a week)</label>
+                <input type="number" id="unusual_ev" value="0" min="0" step="1" style="width:100%; text-align:left; padding-left:12px;">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title">Calculated Totals</div>
+      <div class="cards">
+        <div class="card totals-card">
+          <div class="card-header">Overall Summary (Auto-calculated)</div>
+          <div class="card-body">
+            <div class="f-row">
+              <div class="f-col"><label>Total notifications from community</label><input type="number" id="tot_comm" value="0" readonly></div>
+              <div class="f-col"><label>Total fulfilling case definition (by HEWs)</label><input type="number" id="tot_def" value="0" readonly></div>
+              <div class="f-col"><label>Total done within 30 minutes of detection</label><input type="number" id="tot_30m" value="0" readonly></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="btns">
+        <button class="btn" id="submitBtn" onclick="submitData()">Submit Form to Database</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="msg" id="msg"></div>
+
+<script>
+// YOUR SPECIFIC GOOGLE SCRIPT WEB APP URL
+const SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwEWlUDyUQmQUT-5kDfgHnK3yy5_MAhuaz1IxZe7OoFR0iFYoTkBVsN9gBDN7hZbCYQ/exec";
+
+let facList = [], currentFacilities = [];
+let epiY, epiM, epiW, currentZone = '', currentWoreda = '';
+
+const DISEASES = [
+  { n: "Malaria", k: "malaria", t30: false },
+  { n: "Meningitis", k: "meningitis", t30: false },
+  { n: "Acute Febrile Illness (AFI)", k: "afi", t30: false },
+  { n: "Dysentery", k: "dysentery", t30: false },
+  { n: "SAM (Under 5)", k: "sam", t30: false },
+  { n: "Diarrhea with dehydration (Under 5)", k: "diarrhea", t30: false },
+  { n: "Severe Pneumonia in children U5", k: "pneumonia", t30: false },
+  { n: "Diabetes Mellitus (New)", k: "diabetes", t30: false },
+  { n: "Hypertension (New)", k: "hypertension", t30: false },
+  { n: "Tuberculosis (New)", k: "tb", t30: false },
+  { n: "AFP", k: "afp", t30: true },
+  { n: "Cholera", k: "cholera", t30: true },
+  { n: "Dracunculiasis", k: "guinea", t30: true },
+  { n: "AEFI", k: "aefi", t30: true },
+  { n: "Anthrax", k: "anthrax", t30: false },
+  { n: "Measles", k: "measles", t30: true },
+  { n: "Neonatal Tetanus", k: "tetanus", t30: true },
+  { n: "Human Influenza", k: "flu", t30: true },
+  { n: "COVID-19", k: "covid", t30: true },
+  { n: "Rabies exposure", k: "rabies", t30: true },
+  { n: "Viral Hemorrhagic Fevers", k: "vhf", t30: false },
+  { n: "Yellow Fever", k: "yf", t30: true },
+  { n: "Maternal death", k: "mat", t30: true },
+  { n: "Perinatal death", k: "peri", t30: true },
+  { n: "Obstetric fistula", k: "fistula", t30: true }
+];
+
+function init(){
+  var t = new Date(), wd = (t.getDay() + 6) % 7 + 1, th = new Date(t);
+  th.setDate(t.getDate() - wd - 3);
+  epiY = th.getFullYear(); 
+  epiM = ["January","February","March","April","May","June","July","August","September","October","November","December"][th.getMonth()];
+  var j1 = new Date(epiY, 0, 1);
+  epiW = Math.floor((Math.floor((th - j1) / 86400000) + 10) / 7);
+  if(epiW < 1) epiW = 1; if(epiW > 52) epiW = 52;
+  
+  document.getElementById('lbl_y').textContent = epiY;
+  document.getElementById('lbl_m').textContent = epiM;
+  document.getElementById('lbl_w').textContent = epiW;
+  
+  loadFacilities();
+  renderDiseaseCards();
+}
+
+function parseCSV(str) {
+  var result = [], row = [], field = '', inQ = false;
+  for (var i = 0; i < str.length; i++) {
+    var c = str[i], nc = str[i+1];
+    if (inQ) {
+      if (c === '"' && nc === '"') { field += '"'; i++; }
+      else if (c === '"') { inQ = false; }
+      else { field += c; }
+    } else {
+      if (c === '"') { inQ = true; }
+      else if (c === ',') { row.push(field.trim()); field = ''; }
+      else if (c === '\n' || c === '\r') {
+        if (c === '\r' && nc === '\n') i++;
+        if (field || row.length > 0) { row.push(field.trim()); result.push(row); row = []; field = ''; }
+      } else { field += c; }
+    }
+  }
+  if (field || row.length > 0) { row.push(field.trim()); result.push(row); }
+  return result;
+}
+
+function loadFacilities(){
+  fetch('https://docs.google.com/spreadsheets/d/1H35dwM2pQO6pdycz-HcOKXiVlL10GXZX9Vvme4CLzQE/gviz/tq?tqx=out:csv&sheet=MFR%20Facility%20List')
+  .then(r => r.text())
+  .then(csv => {
+    var rows = parseCSV(csv);
+    var hdr = rows[0];
+    var cid = hdr.indexOf('Woreda ID'), cz = hdr.indexOf('Zone'), cw = hdr.indexOf('Woreda');
+    var cf = hdr.indexOf('Health_Facility'), ct = hdr.indexOf('Facility Type');
+    var co = hdr.indexOf('Ownership'), cs = hdr.indexOf('Operational Status');
+    
+    facList = [];
+    for(var i = 1; i < rows.length; i++){
+      var c = rows[i];
+      if(c.length < 4) continue;
+      // STRICT FILTER: Only Operational Public Health Centers
+      let type = (c[ct] || '').toLowerCase();
+      let owner = (c[co] || '').toLowerCase();
+      let status = (c[cs] || '').toLowerCase();
+      
+      if(status === 'operational' && type.includes('health center') && owner.includes('public/government')){
+        facList.push({ id: c[cid], zone: c[cz], woreda: c[cw], fac: c[cf] });
+      }
+    }
+  }).catch(() => msg('Could not load facilities list', 'e'));
+}
+
+function validateWoreda(){
+  var id = document.getElementById('woredaInput').value.trim();
+  var hint = document.getElementById('woredaHint');
+  
+  document.getElementById('formBody').style.display = 'none';
+  document.getElementById('fs').innerHTML = '<option value="">Select Facility</option>';
+  document.getElementById('fs').disabled = true;
+  document.getElementById('zf').value = '';
+  document.getElementById('wf').value = '';
+  
+  if(!id) { hint.innerHTML = 'Type a valid Woreda ID'; hint.className = 'hint'; return; }
+  
+  var facs = facList.filter(f => f.id === id);
+  if(facs.length > 0){
+    hint.innerHTML = '✔ Valid Woreda ID'; hint.className = 'hint hint-valid';
+    currentZone = facs[0].zone; currentWoreda = facs[0].woreda;
+    document.getElementById('zf').value = currentZone;
+    document.getElementById('wf').value = currentWoreda;
+    
+    facs.forEach(f => {
+      let opt = document.createElement('option');
+      opt.value = f.fac; opt.textContent = f.fac;
+      document.getElementById('fs').appendChild(opt);
+    });
+    document.getElementById('fs').disabled = false;
+  } else {
+    hint.innerHTML = '✖ ID not found or has no Public Health Centers'; hint.className = 'hint hint-invalid';
+  }
+}
+
+function onFacilityChange() {
+  if(document.getElementById('fs').value) {
+    document.getElementById('formBody').style.display = 'block';
+  } else {
+    document.getElementById('formBody').style.display = 'none';
+  }
+}
+
+function renderDiseaseCards() {
+  let container = document.getElementById('diseaseCards');
+  let html = '';
+  
+  DISEASES.forEach(d => {
+    html += `
+    <div class="card">
+      <div class="card-header">${d.n}</div>
+      <div class="card-body">
+        <div class="f-row">
+          <div class="f-col">
+            <label>From community</label>
+            <input type="number" id="${d.k}_comm" value="0" min="0" step="1" oninput="calculateAndValidate()">
+          </div>
+          <div class="f-col">
+            <label>Fulfilling case def.</label>
+            <input type="number" id="${d.k}_def" value="0" min="0" step="1" oninput="calculateAndValidate()">
+          </div>
+          ${d.t30 ? `
+          <div class="f-col">
+            <label>Within 30 mins</label>
+            <input type="number" id="${d.k}_30m" value="0" min="0" step="1" oninput="calculateAndValidate()">
+          </div>
+          ` : `<input type="hidden" id="${d.k}_30m" value="0">`}
+        </div>
+        <div class="error-msg" id="${d.k}_err">Logic Error: Comm >= Case Def >= 30 Min is required!</div>
+      </div>
+    </div>`;
+  });
+  container.innerHTML = html;
+}
+
+function calculateAndValidate() {
+  let totComm = 0, totDef = 0, tot30m = 0;
+  let allValid = true;
+
+  DISEASES.forEach(d => {
+    let comm = parseInt(document.getElementById(d.k + '_comm').value) || 0;
+    let def = parseInt(document.getElementById(d.k + '_def').value) || 0;
+    let t30 = parseInt(document.getElementById(d.k + '_30m').value) || 0;
+    
+    let errEl = document.getElementById(d.k + '_err');
+    
+    // Validate Logics: Community >= Case Definition >= 30 mins
+    let isValid = true;
+    if (comm < def) isValid = false;
+    if (d.t30 && def < t30) isValid = false;
+    
+    if (!isValid) {
+      allValid = false;
+      errEl.style.display = 'block';
+      document.getElementById(d.k + '_comm').classList.add('input-error');
+      document.getElementById(d.k + '_def').classList.add('input-error');
+      if (d.t30) document.getElementById(d.k + '_30m').classList.add('input-error');
+    } else {
+      errEl.style.display = 'none';
+      document.getElementById(d.k + '_comm').classList.remove('input-error');
+      document.getElementById(d.k + '_def').classList.remove('input-error');
+      if (d.t30) document.getElementById(d.k + '_30m').classList.remove('input-error');
+    }
+
+    totComm += comm;
+    totDef += def;
+    tot30m += t30;
+  });
+
+  document.getElementById('tot_comm').value = totComm;
+  document.getElementById('tot_def').value = totDef;
+  document.getElementById('tot_30m').value = tot30m;
+
+  document.getElementById('submitBtn').disabled = !allValid;
+}
+
+function submitData() {
+  let facility = document.getElementById('fs').value;
+  if(!facility) return msg('Please select a facility', 'e');
+
+  let payload = {
+    action: 'submitCommunityData',
+    Region: 'Addis Ababa',
+    SubCity: currentZone,
+    Woreda: currentWoreda,
+    FacilityName: facility,
+    FacilityType: 'Health Center',
+    Ownership: 'Public/Government',
+    Year: epiY,
+    Month: epiM,
+    EpiWeek: epiW,
+    Data: {}
+  };
+
+  DISEASES.forEach(d => {
+    payload.Data[d.k] = {
+      comm: document.getElementById(d.k + '_comm').value,
+      def: document.getElementById(d.k + '_def').value,
+      t30: d.t30 ? document.getElementById(d.k + '_30m').value : 0
+    };
+  });
+
+  payload.Data.rumors = {
+    received: document.getElementById('rumor_rcv').value,
+    investigated: document.getElementById('rumor_inv').value,
+    unusual: document.getElementById('unusual_ev').value
+  };
+
+  let btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+
+  fetch(SCRIPT_API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(payload)
+  })
+  .then(response => response.json())
+  .then(data => {
+    if(data.status === 'success') { 
+      msg('Data Successfully Submitted to System!', 's');
+      if (typeof confetti === 'function') confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }});
+      setTimeout(() => { location.reload(); }, 3000);
+    } else {
+      msg('Server Error: ' + data.message, 'e');
+      btn.textContent = 'Submit Form to Database';
+      btn.disabled = false;
+    }
+  })
+  .catch(error => {
+    msg('Network Error: Could not connect to Google Script.', 'e');
+    btn.textContent = 'Submit Form to Database';
+    btn.disabled = false;
+  });
+}
+
+function msg(text, type) {
+  var m = document.getElementById('msg');
+  m.innerHTML = '<span>' + text + '</span>';
+  m.className = 'msg ' + type + ' show';
+  setTimeout(() => { m.className = 'msg ' + type; }, 4000);
+}
+
+window.onload = init;
+</script>
+</body>
+</html>
