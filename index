@@ -191,7 +191,7 @@
 // API INTEGRATION POINT
 // This is exactly the URL you provided. It points to your Google Apps Script.
 // =========================================================================
-const SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwEWlUDyUQmQUT-5kDfgHnK3yy5_MAhuaz1IxZe7OoFR0iFYoTkBVsN9gBDN7hZbCYQ/exec";
+const SCRIPT_API_URL = "AKfycbwEWlUDyUQmQUT-5kDfgHnK3yy5_MAhuaz1IxZe7OoFR0iFYoTkBVsN9gBDN7hZbCYQ";
 
 // Global Variables
 let facList = [];
