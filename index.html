@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Addis Ababa PHEM - CBES Notifications Form</title>
   
-  <!-- ADDED: Browser Favicon using SVG matching the nav logo -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2310b981' stroke-width='2.5'><path d='M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2'></path><circle cx='9' cy='7' r='4'></circle><path d='M23 21v-2a4 4 0 0 0-3-3.87'></path><path d='M16 3.13a4 4 0 0 1 0 7.75'></path></svg>">
   
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
@@ -295,6 +294,7 @@
 // =========================================================
 // API CONNECTION SETUP (GITHUB TO GOOGLE SHEET)
 // =========================================================
+// Ensure you replace this with your latest Deployment URL:
 const SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwEWlUDyUQmQUT-5kDfgHnK3yy5_MAhuaz1IxZe7OoFR0iFYoTkBVsN9gBDN7hZbCYQ/exec";
 
 const DISEASES = [
@@ -508,6 +508,7 @@ function renderCards() {
       ? '<div class="f-col"><label>Done within 30 min</label><input type="number" id="' + d.k + '_30m" value="0" oninput="calculateAndValidate()"></div>' 
       : '<input type="hidden" id="' + d.k + '_30m" value="0">';
       
+    // Note: The card body is rendered OPEN by default (no 'hide' class).
     return '<div class="card">' +
              '<div class="card-header" onclick="this.nextElementSibling.classList.toggle(\'hide\')">' +
                '<span>' + d.n + '</span>' +
@@ -641,17 +642,25 @@ function loadExistingRecord(fname) {
         let headers = res.headers;
         sel = {};
         
+        // FIX: Ensure that if ANY number > 0 is populated for a disease, it selects the tag and shows the accordion.
         DISEASES.forEach(d => {
           let commCol = hdrIndex(headers, 'Tot_no_' + d.k + '_notif');
           let defCol = hdrIndex(headers, 'Tot_no_' + d.k + '_fulf');
-          if (commCol !== -1 && (parseInt(r[commCol]) > 0 || parseInt(r[defCol]) > 0)) {
+          let t30Col = hdrIndex(headers, 'Tot_no_' + d.k + '_30min');
+          
+          let cVal = commCol !== -1 ? parseInt(r[commCol]) || 0 : 0;
+          let dVal = defCol !== -1 ? parseInt(r[defCol]) || 0 : 0;
+          let tVal = t30Col !== -1 ? parseInt(r[t30Col]) || 0 : 0;
+          
+          // If any field has a number greater than 0, mark it as selected
+          if (cVal > 0 || dVal > 0 || tVal > 0) {
             sel[d.k] = {};
           }
         });
         
         renderTags();
         renderST();
-        renderCards();
+        renderCards(); // This renders the accordion boxes open for all selected tags
         updateSections();
         
         setTimeout(() => {
@@ -733,8 +742,7 @@ function calculateAndValidate() {
     let errEl = document.getElementById(d.k + '_err');
     let isValid = true;
     
-    // We only validate logical errors inline (Comm >= Def >= 30min). 
-    // We NO LONGER check for >0 here so the button stays active to show the popup!
+    // Validate logical errors inline
     if (comm < def) {
       isValid = false;
       if (errEl) errEl.classList.add('show');
@@ -762,7 +770,6 @@ function calculateAndValidate() {
   let keysCount = Object.keys(sel).length;
   let isNoCases = document.querySelector('input[name="ct"]:checked').value === 'nocases';
   
-  // Enable button as long as there are no logical errors (Comm >= Def) AND (diseases selected OR No Cases checked)
   btn.disabled = !(allValid && (keysCount > 0 || isNoCases));
 }
 
@@ -782,7 +789,7 @@ function sub() {
   
   let no = document.querySelector('input[name="ct"]:checked').value === 'nocases';
   
-  // POPUP ZERO-VALIDATION: Check that all selected diseases have values > 0 before actual submission
+  // POPUP ZERO-VALIDATION Check
   if (!no) {
     let zeroFields = [];
     DISEASES.forEach(d => {
@@ -794,7 +801,6 @@ function sub() {
       }
     });
     if (zeroFields.length > 0) {
-      // Show the popup and STOP submission
       return msg('⚠️ Please enter a number greater than 0 for: ' + zeroFields.join(', '), 'e');
     }
   }
