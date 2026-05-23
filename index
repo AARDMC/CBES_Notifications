@@ -4,107 +4,124 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Addis Ababa PHEM - CBES Notifications Form</title>
-  
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
   <style>
-    :root {
-      --primary: #4f46e5;
-      --primary-dark: #4338ca;
-      --secondary: #7c3aed;
-      --bg-color: #f0f4ff;
-      --text-main: #1e293b;
-      --text-muted: #475569;
-      --error: #ef4444;
-      --success: #10b981;
-    }
-    
     *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:var(--bg-color); padding:15px; font-size:15px; color:var(--text-main)}
+    body{font-family:Arial,sans-serif;background:#f0fdf4;padding:10px;font-size:16px;color:#1e293b}
     
-    .container{max-width:950px; margin:0 auto; background:white; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.05); overflow:hidden;}
+    .container{max-width:950px;margin:0 auto;background:white;border-radius:12px;padding:0;box-shadow:0 2px 12px rgba(0,0,0,0.08);}
     
-    .navbar{background:linear-gradient(135deg, #1e3a5f 0%, #2d5a87 30%, var(--primary) 60%, var(--secondary) 100%); padding:18px 24px; display:flex; align-items:center; gap:16px; flex-wrap:wrap;}
-    .navbar .nav-logo{background:rgba(255,255,255,0.2); width:50px; height:50px; border-radius:12px; display:flex; align-items:center; justify-content:center; color:white; flex-shrink:0; backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.3)}
-    .navbar .nav-title-group{flex:1; min-width:200px}
-    .navbar .nav-title{font-size:20px; font-weight:800; color:white; line-height:1.2; text-shadow:0 1px 3px rgba(0,0,0,0.2)}
-    .navbar .nav-subtitle{font-size:13px; color:rgba(255,255,255,0.9); font-weight:500; margin-top:3px}
-    
-    .content{padding:20px}
-    
-    .info-bar{display:flex; flex-wrap:wrap; justify-content:space-evenly; align-items:center; background:linear-gradient(to right, var(--primary), var(--secondary)); color:white; padding:8px 16px; border-radius:10px; margin-bottom:16px; font-size:14px; font-weight:600; box-shadow:0 4px 6px -1px rgba(0,0,0,0.1); gap:12px;}
-    .info-bar div{display:flex; align-items:center; gap:8px;}
-    .info-bar span{background:rgba(255,255,255,0.25); color:white; padding:4px 12px; border-radius:6px; box-shadow:0 1px 2px rgba(0,0,0,0.1)}
-    
-    .facility-sticky {position:sticky; top:0; z-index:50; background:#ffffff; padding:15px; margin:-15px -15px 20px -15px; border-bottom:1px solid #cbd5e1; box-shadow:0 4px 8px -2px rgba(0,0,0,0.05);}
-    .row{display:flex; flex-wrap:wrap; gap:12px;}
-    .col{flex:1 1 150px; min-width:120px;}
-    .col label{display:block; font-size:12px; font-weight:700; text-transform:uppercase; color:var(--text-muted); margin-bottom:6px;}
-    .col select, .col input{width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:6px; font-size:14px; background:white; transition:border-color 0.2s;}
-    .col select:focus, .col input:focus{outline:none; border-color:var(--primary);}
-    .col input:disabled, .col select:disabled{background:#f8fafc; cursor:not-allowed; color:#94a3b8;}
-    
-    .hint{font-size:12px; margin-top:5px; display:flex; align-items:center; gap:4px; font-weight:500;} 
-    .hint-valid{color:var(--success)} .hint-invalid{color:var(--error)}
-    
-    .section-title {font-size:17px; font-weight:800; color:var(--text-main); margin:25px 0 15px 0; padding-bottom:8px; border-bottom:2px solid #e2e8f0;}
-    
-    .cards{display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:16px;}
-    .card{background:white; border:1px solid #cbd5e1; border-radius:8px; overflow:hidden; box-shadow:0 2px 4px rgba(0,0,0,0.02); transition:transform 0.2s;}
-    .card:hover{transform:translateY(-2px); box-shadow:0 4px 8px rgba(0,0,0,0.05);}
-    .card-header{padding:12px 16px; background:linear-gradient(135deg, #1e3a5f, #2d5a87); color:white; font-weight:700; font-size:14px;}
-    .card-body{padding:16px; background:#f8fafc;}
-    
-    .f-row{display:flex; flex-direction:column; gap:10px;}
-    .f-col{display:flex; justify-content:space-between; align-items:center;}
-    .f-col label{font-size:13px; font-weight:600; color:var(--text-muted); flex:1;}
-    .f-col input{width:80px; padding:6px; border:1px solid #cbd5e1; border-radius:6px; font-size:14px; text-align:center;}
-    .f-col input[readonly]{background:#e2e8f0; font-weight:700; border:none; color:var(--text-main);}
-    .f-col input.input-error{border-color:var(--error); background:#fef2f2; color:var(--error); font-weight:bold;}
-    
-    .error-msg{color:var(--error); font-size:12px; font-weight:700; margin-top:8px; display:none; background:#fef2f2; padding:8px; border-radius:6px; border:1px solid #fecaca;}
-    
-    .rumor-card{grid-column:1 / -1; background:#eff6ff; border-color:#93c5fd;}
-    .rumor-card .card-header{background:linear-gradient(135deg, #2563eb, #3b82f6);}
-    
-    .totals-card{grid-column:1 / -1; background:#f0fdfa; border-color:#5eead4;}
-    .totals-card .card-header{background:linear-gradient(135deg, #0f766e, #0d9488);}
-    .totals-card input{font-size:16px; width:100px; background:#ccfbf1!important; color:#0f766e;}
-    
-    .btns{display:flex; gap:10px; margin-top:25px;}
-    .btn{flex:1; padding:16px; border-radius:8px; border:none; background:var(--primary); color:white; font-weight:800; font-size:16px; cursor:pointer; transition:all 0.2s; box-shadow:0 4px 6px rgba(79,70,229,0.2);}
-    .btn:hover:not(:disabled){background:var(--primary-dark); transform:translateY(-1px);}
-    .btn:disabled{opacity:0.6; cursor:not-allowed; background:#94a3b8; box-shadow:none;}
+    .navbar{background:linear-gradient(135deg,#065f46 0%,#047857 30%,#059669 60%,#10b981 100%);padding:16px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;border-radius:12px 12px 0 0;}
+    .navbar .nav-logo{background:rgba(255,255,255,0.2);width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:white;flex-shrink:0;backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.3)}
+    .navbar .nav-title-group{flex:1;min-width:200px}
+    .navbar .nav-title{font-size:19px;font-weight:800;color:white;line-height:1.2;text-shadow:0 1px 3px rgba(0,0,0,0.2)}
+    .navbar .nav-subtitle{font-size:13px;color:rgba(255,255,255,0.85);font-weight:500;margin-top:2px}
 
-    .msg{position:fixed; top:20px; left:50%; transform:translateX(-50%) translateY(-20px); z-index:99999; padding:12px 24px; border-radius:50px; font-size:14px; font-weight:700; display:flex; align-items:center; gap:10px; box-shadow:0 10px 25px rgba(0,0,0,0.2); opacity:0; visibility:hidden; transition:all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); color:white;}
-    .msg.show{transform:translateX(-50%) translateY(0); opacity:1; visibility:visible;}
-    .msg.s{background:linear-gradient(135deg, #059669, #10b981);}
-    .msg.e{background:linear-gradient(135deg, #dc2626, #ef4444);}
-    .msg.w{background:linear-gradient(135deg, #d97706, #f59e0b);}
+    .gauge-container{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.15);padding:4px 12px;border-radius:20px;backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.2);}
+    .gauge-wrapper{position:relative;width:32px;height:32px;display:flex;align-items:center;justify-content:center;}
+    .gauge-ring{position:absolute;top:0;left:0;width:100%;height:100%;border-radius:50%;background:conic-gradient(#10b981 var(--comp,0%),rgba(255,255,255,0.2) 0);-webkit-mask:radial-gradient(closest-side,transparent 75%,black 76%);mask:radial-gradient(closest-side,transparent 75%,black 76%);}
+    .gauge-text{font-size:10px;font-weight:800;color:white;position:relative;z-index:2;}
+    .gauge-label{font-size:12px;font-weight:700;color:white;}
     
-    #error-catcher{display:none; background:#fef2f2; color:#b91c1c; padding:15px; margin-bottom:15px; border-left:4px solid #ef4444; border-radius:4px; font-size:14px;}
+    .content{padding:15px}
+    
+    .info-bar{display:flex;flex-wrap:wrap;justify-content:space-evenly;align-items:center;background:linear-gradient(to right,#059669,#10b981);color:white;padding:6px 12px;border-radius:10px;margin-bottom:12px;font-size:14px;font-weight:600;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);gap:10px;}
+    .info-bar div{display:flex;flex-direction:row;align-items:center;gap:8px;white-space:nowrap;}
+    .info-bar span{background:rgba(255,255,255,0.25);color:white;padding:4px 12px;border-radius:6px;font-size:14px;}
+    .reset-btn{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.4);color:white;padding:4px 12px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;transition:0.2s;}
+    .reset-btn:hover{background:rgba(255,255,255,0.25);}
+    
+    .facility-sticky{position:sticky;top:0;z-index:50;background:white;padding:15px;margin:-15px -15px 15px -15px;border-bottom:1px solid #cbd5e1;box-shadow:0 4px 8px -2px rgba(0,0,0,0.08);}
+    .row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px}
+    .col{flex:1 1 150px;min-width:120px}
+    .col label{display:block;font-size:12px;font-weight:700;text-transform:uppercase;color:#475569;margin-bottom:4px}
+    .col select,.col input{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:6px;font-size:15px;background:white}
+    .col input:disabled,.col select:disabled{background:#f1f5f9}
+    .woreda-hint{font-size:12px;margin-top:3px;display:flex;align-items:center;gap:4px;} .woreda-valid{color:#10b981} .woreda-invalid{color:#ef4444}
+
+    .facility-locked{background:#fef3c7;border:1px solid #fcd34d;color:#92400e;padding:10px 14px;border-radius:8px;font-size:14px;font-weight:600;margin-bottom:12px;display:none;align-items:center;gap:10px;flex-wrap:wrap}
+    .facility-locked.show{display:flex}
+    .facility-locked .edit-btn{padding:6px 14px;font-size:13px;background:#92400e;color:white;border-radius:6px;cursor:pointer;font-weight:700;border:none;margin-left:auto}
+    
+    .toggle-row{display:flex;align-items:center;gap:12px;padding:10px 12px;background:#f8fafc;border-radius:8px;margin-bottom:12px}
+    .toggle-row label{display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:600;font-size:14px}
+    
+    .search-box{margin-bottom:8px;position:relative}
+    .search-box input{width:100%;padding:10px 10px 10px 34px;border:1.5px solid #e2e8f0;border-radius:20px;font-size:14px}
+    .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#94a3b8;}
+    .tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;min-height:24px}
+    .tag{display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border-radius:14px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid #e2e8f0;background:white;transition:0.2s}
+    .tag:hover{opacity:0.8}
+    .tag.sel{color:white}
+    .tag.immediate{border-left:4px solid #ea580c} .tag.weekly{border-left:4px solid #0891b2}
+    .tag.immediate.sel{background:#ea580c;border-color:#ea580c} .tag.weekly.sel{background:#0891b2;border-color:#0891b2}
+    
+    .cards{margin:12px 0}
+    .card{background:white;border:1px solid #cbd5e1;border-radius:8px;margin-bottom:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.05)}
+    .card-header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:linear-gradient(135deg,#065f46,#047857);color:white;cursor:pointer;font-weight:700;font-size:15px}
+    .card-body{padding:10px 16px;background:#f8fafc} .card-body.hide{display:none}
+    
+    .f-row{display:flex;flex-wrap:wrap;gap:6px}
+    .f-col{flex:1 1 55px} .f-col.wide{flex:2 1 100px}
+    .f-col label{font-size:9px;font-weight:800;text-transform:uppercase;color:#64748b;display:block;margin-bottom:3px}
+    .f-col input{width:100%;padding:8px 4px;border:1px solid #e2e8f0;border-radius:4px;font-size:14px;text-align:center}
+    .f-col input.input-error{border-color:#ef4444;background:#fef2f2}
+    .f-col textarea{width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:4px;font-size:13px;resize:vertical;font-family:Arial,sans-serif}
+    .f-col input[readonly]{background:#f1f5f9;font-weight:700}
+    
+    .error-msg{color:#ef4444;font-size:11px;font-weight:600;margin-top:4px;display:none}
+    .error-msg.show{display:block}
+    .zero-error{color:#ef4444;font-size:10px;font-weight:700;margin-top:2px;display:none}
+    .zero-error.show{display:block}
+    
+    .bottom-bar{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:15px}
+    .kpi-cards{display:flex;gap:10px;flex:1 1 auto;min-width:200px}
+    .kpi-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:12px 16px;border-radius:12px;flex:1;box-shadow:0 2px 4px rgba(0,0,0,0.05);min-width:90px}
+    .kpi-card .kpi-label{font-size:10px;font-weight:800;text-transform:uppercase;text-align:center}
+    .kpi-card .kpi-value{font-size:20px;font-weight:900}
+    .kpi-comp{background:linear-gradient(135deg,#ecfdf5,#d1fae5);border:1px solid #a7f3d0;color:#065f46}
+    .kpi-time{background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #bfdbfe;color:#1e40af}
+    
+    .action-btns{display:flex;flex-wrap:wrap;gap:8px;flex:2 1 auto}
+    .btn{flex:1 1 auto;padding:12px 16px;border-radius:24px;border:1px solid #cbd5e1;background:white;font-weight:700;font-size:14px;cursor:pointer;text-align:center;transition:0.2s;white-space:nowrap}
+    .btn.p{background:#059669;color:white;border-color:#059669}
+    .btn:disabled{opacity:0.5;cursor:not-allowed}
+
+    .msg{position:fixed;top:25px;left:50%;transform:translateX(-50%) translateY(-30px);z-index:99999;padding:12px 24px;border-radius:50px;font-size:15px;font-weight:700;color:white;opacity:0;visibility:hidden;transition:0.5s;max-width:90vw}
+    .msg.show{transform:translateX(-50%) translateY(0);opacity:1;visibility:visible;}
+    .msg.s{background:#059669} .msg.e{background:#dc2626}
+
+    .modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;padding:15px}
+    .modal-overlay.show{display:flex}
+    .modal-content{background:white;padding:20px;border-radius:12px;max-width:950px;width:100%;max-height:90vh;overflow:auto}
+    .data-table{width:100%;border-collapse:collapse;font-size:12px}
+    .data-table th,.data-table td{border:1px solid #cbd5e1;padding:6px 8px;text-align:left;white-space:nowrap}
+    .data-table th{background:#f1f5f9;font-weight:700;position:sticky;top:0}
+    
+    @media(max-width:700px){
+      .bottom-bar{flex-direction:column}
+      .kpi-cards{width:100%}
+      .action-btns{width:100%}
+    }
+    @media(max-width:500px){
+      .navbar .nav-title{font-size:15px}
+      .action-btns .btn{font-size:12px;padding:10px}
+    }
   </style>
-
-  <script>
-    window.onerror = function(msg, url, line) {
-      var err = document.getElementById('error-catcher');
-      if(err) {
-        err.style.display = 'block';
-        err.innerHTML = '<strong>System Alert:</strong> A script failed to load. Please refresh the page.<br><small>' + msg + ' (Line ' + line + ')</small>';
-      }
-    };
-  </script>
 </head>
 <body>
-
 <div class="container">
-  <div id="error-catcher"></div>
-  
   <div class="navbar">
     <div class="nav-logo">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
     </div>
     <div class="nav-title-group">
-      <div class="nav-title">CBES Notifications Form</div>
-      <div class="nav-subtitle">Public Health Centers - Addis Ababa</div>
+      <div class="nav-title">Community Based Event Surveillance (CBES) Notification Form</div>
+      <div class="nav-subtitle">Powered by: Addis Ababa City Data Management Center</div>
+    </div>
+    <div class="gauge-container">
+      <div class="gauge-wrapper"><div class="gauge-ring" id="navGauge" style="--comp:0%;"></div><div class="gauge-text" id="navCompText">0%</div></div>
+      <span class="gauge-label">Completed</span>
     </div>
   </div>
 
@@ -113,385 +130,388 @@
         <div>Year <span id="lbl_y">—</span></div>
         <div>Month <span id="lbl_m">—</span></div>
         <div>Epi Week <span id="lbl_w">—</span></div>
+        <button onclick="resetAll()" class="reset-btn">Reset Form</button>
     </div>
 
     <div class="facility-sticky">
       <div class="row">
-        <div class="col">
-          <label>Woreda ID</label>
-          <input type="text" id="woredaInput" placeholder="Enter Woreda ID..." oninput="validateWoreda()" autocomplete="off">
-          <div class="hint" id="woredaHint">Type your facility's Woreda ID</div>
-        </div>
-        <div class="col"><label>Sub City / Zone</label><input id="zf" disabled placeholder="Auto populated"></div>
-        <div class="col"><label>Woreda</label><input id="wf" disabled placeholder="Auto populated"></div>
-        <div class="col">
-          <label>Health Center (Public Only)</label>
-          <select id="fs" disabled onchange="onFacilityChange()">
-            <option value="">Select Facility</option>
-          </select>
-        </div>
+        <div class="col"><label>Woreda ID</label><input type="text" id="woredaInput" placeholder="Type Woreda ID..." oninput="validateWoreda()" autocomplete="off"><div class="woreda-hint" id="woredaHint"></div></div>
+        <div class="col"><label>Sub City / Zone</label><input id="zf" disabled></div>
+        <div class="col"><label>Woreda</label><input id="wf" disabled></div>
+        <div class="col"><label>Health Center Name</label><select id="fs" disabled onchange="onFacilityChange()"><option value="">Select Facility</option></select></div>
       </div>
     </div>
 
-    <div id="formBody">
-      <div class="section-title">Reportable Diseases & Conditions</div>
-      <div class="cards" id="diseaseCards">
-        </div>
+    <div class="facility-locked" id="facilityLockedMsg">
+      <span id="lockedFacilityName"></span> has already submitted for this week.
+      <button class="edit-btn" id="editBtn" onclick="editRecord()">✏️ Edit Record</button>
+    </div>
 
-      <div class="section-title">Rumors & Unusual Events</div>
-      <div class="cards">
-        <div class="card rumor-card">
-          <div class="card-header">Community Rumors & Events</div>
-          <div class="card-body">
-            <div class="f-row">
-              <div class="f-col">
-                <label>Notifications/rumors received from toll-free 6406</label>
-                <input type="number" id="rumor_rcv" value="0" min="0" step="1">
-              </div>
-              <div class="f-col">
-                <label>Rumors investigated from 6406</label>
-                <input type="number" id="rumor_inv" value="0" min="0" step="1">
-              </div>
-              <div class="f-col" style="flex-direction:column; align-items:flex-start; gap:8px;">
-                <label style="width:100%;">Unusual health events (2+ severe illnesses or deaths in a week)</label>
-                <input type="number" id="unusual_ev" value="0" min="0" step="1" style="width:100%; text-align:left; padding-left:12px;">
-              </div>
-            </div>
-          </div>
-        </div>
+    <div class="toggle-row">
+      <span style="font-weight:700">Reporting:</span>
+      <label><input type="radio" name="ct" value="cases" checked onchange="tog()">Cases to Report</label>
+      <label><input type="radio" name="ct" value="nocases" onchange="tog()">No Cases</label>
+    </div>
+
+    <div id="ds">
+      <div style="font-weight:700;margin-bottom:8px">Select Diseases to Report</div>
+      <div class="search-box"><span class="search-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span><input type="text" id="sq" placeholder="Search diseases..." oninput="fil()"></div>
+      <div class="tags" id="st"></div>
+      <div class="tags" id="at"></div>
+      <div class="cards" id="dc"></div>
+      <div class="cards" id="rumorSection" style="display:none;"><div class="card" style="border-color:#93c5fd"><div class="card-header" style="background:#3b82f6" onclick="this.nextElementSibling.classList.toggle('hide')"><span>📢 Community Rumors & Events</span></div><div class="card-body"><div class="f-row"><div class="f-col wide"><label>Notifs received from 6406</label><input type="number" id="rumor_rcv" value="0"></div><div class="f-col wide"><label>Rumors investigated from 6406</label><input type="number" id="rumor_inv" value="0"></div></div><div style="margin-top:8px"><label style="font-size:10px;font-weight:800;color:#64748b">Unusual health events (2+ severe illnesses or deaths in a week)</label><textarea id="unusual_ev" rows="2" placeholder="Describe any unusual health events observed..."></textarea></div></div></div></div>
+      <div class="cards" id="totalsSection" style="display:none;"><div class="card" style="border-color:#5eead4"><div class="card-header" style="background:#0f766e" onclick="this.nextElementSibling.classList.toggle('hide')"><span>📊 Overall Summary (Auto-calculated)</span></div><div class="card-body"><div class="f-row"><div class="f-col wide"><label>Total notifications from community</label><input type="number" id="tot_comm" value="0" readonly></div><div class="f-col wide"><label>Total fulfilling case definition</label><input type="number" id="tot_def" value="0" readonly></div><div class="f-col wide"><label>Total done within 30 minutes</label><input type="number" id="tot_30m" value="0" readonly></div></div></div></div></div>
+    </div>
+
+    <div class="bottom-bar">
+      <div class="kpi-cards">
+        <div class="kpi-card kpi-comp"><span class="kpi-label">Completeness</span><span class="kpi-value" id="agg_comp">0%</span></div>
+        <div class="kpi-card kpi-time"><span class="kpi-label">Timeliness</span><span class="kpi-value" id="agg_time">0%</span></div>
       </div>
-
-      <div class="section-title">Calculated Totals</div>
-      <div class="cards">
-        <div class="card totals-card">
-          <div class="card-header">Overall Summary (Auto-calculated)</div>
-          <div class="card-body">
-            <div class="f-row">
-              <div class="f-col"><label>Total notifications from community</label><input type="number" id="tot_comm" value="0" readonly></div>
-              <div class="f-col"><label>Total fulfilling case definition (by HEWs)</label><input type="number" id="tot_def" value="0" readonly></div>
-              <div class="f-col"><label>Total done within 30 minutes of detection</label><input type="number" id="tot_30m" value="0" readonly></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="btns">
-        <button class="btn" id="submitBtn" onclick="submitData()" disabled>Select a Facility to Submit</button>
+      <div class="action-btns">
+        <button class="btn" onclick="viewData()">📋 View Data</button>
+        <button class="btn" onclick="showExport()">📥 Export CSV</button>
+        <button class="btn p" id="submitBtn" onclick="sub()" disabled>Select Facility to Submit</button>
       </div>
     </div>
   </div>
 </div>
 
 <div class="msg" id="msg"></div>
-
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+<div class="modal-overlay" id="viewModal"><div class="modal-content"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><strong id="viewTitle">Data</strong><button class="btn" style="padding:6px 16px;font-size:13px" onclick="document.getElementById('viewModal').classList.remove('show')">Close</button></div><div style="overflow:auto;max-height:70vh"><table class="data-table"><thead id="viewHead"></thead><tbody id="viewBody"></tbody></table></div></div></div>
 
 <script>
-// =========================================================================
-// API INTEGRATION POINT
-// =========================================================================
 const SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwEWlUDyUQmQUT-5kDfgHnK3yy5_MAhuaz1IxZe7OoFR0iFYoTkBVsN9gBDN7hZbCYQ/exec";
 
-// Global Variables
-let facList = [];
-let currentZone = '';
-let currentWoreda = '';
-let epiY = '';
-let epiM = '';
-let epiW = '';
-
-// Disease Configuration (t30 = requires 30-minute tracking)
 const DISEASES = [
-  { n: "Malaria", k: "malaria", t30: false },
-  { n: "Meningitis", k: "meningitis", t30: false },
-  { n: "Acute Febrile Illness (AFI)", k: "afi", t30: false },
-  { n: "Dysentery", k: "dysentery", t30: false },
-  { n: "SAM (Under 5)", k: "sam", t30: false },
-  { n: "Diarrhea with dehydration (Under 5)", k: "diarrhea", t30: false },
-  { n: "Severe Pneumonia in children U5", k: "pneumonia", t30: false },
-  { n: "Diabetes Mellitus (New)", k: "diabetes", t30: false },
-  { n: "Hypertension (New)", k: "hypertension", t30: false },
-  { n: "Tuberculosis (New)", k: "tb", t30: false },
-  { n: "AFP", k: "afp", t30: true },
-  { n: "Cholera", k: "cholera", t30: true },
-  { n: "Dracunculiasis", k: "guinea", t30: true },
-  { n: "AEFI", k: "aefi", t30: true },
-  { n: "Anthrax", k: "anthrax", t30: false },
-  { n: "Measles", k: "measles", t30: true },
-  { n: "Neonatal Tetanus", k: "tetanus", t30: true },
-  { n: "Human Influenza", k: "flu", t30: true },
-  { n: "COVID-19", k: "covid", t30: true },
-  { n: "Rabies exposure", k: "rabies", t30: true },
-  { n: "Viral Hemorrhagic Fevers", k: "vhf", t30: false },
-  { n: "Yellow Fever", k: "yf", t30: true },
-  { n: "Maternal death", k: "mat", t30: true },
-  { n: "Perinatal death", k: "peri", t30: true },
-  { n: "Obstetric fistula", k: "fistula", t30: true }
+  { n: "Malaria", k: "malaria", t30: false, r: "weekly" },
+  { n: "Meningitis", k: "meningitis", t30: false, r: "weekly" },
+  { n: "Acute Febrile Illness (AFI)", k: "afi", t30: false, r: "weekly" },
+  { n: "Dysentery", k: "dysentery", t30: false, r: "weekly" },
+  { n: "SAM (Under 5)", k: "sam", t30: false, r: "weekly" },
+  { n: "Diarrhea with dehydration (U5)", k: "diarrhea", t30: false, r: "weekly" },
+  { n: "Severe Pneumonia (U5)", k: "pneumonia", t30: false, r: "weekly" },
+  { n: "Diabetes Mellitus (New)", k: "diabetes", t30: false, r: "weekly" },
+  { n: "Hypertension (New)", k: "hypertension", t30: false, r: "weekly" },
+  { n: "Tuberculosis (New)", k: "tb", t30: false, r: "weekly" },
+  { n: "AFP", k: "afp", t30: true, r: "immediate" },
+  { n: "Cholera", k: "cholera", t30: true, r: "immediate" },
+  { n: "Dracunculiasis", k: "guinea", t30: true, r: "immediate" },
+  { n: "AEFI", k: "aefi", t30: true, r: "immediate" },
+  { n: "Anthrax", k: "anthrax", t30: false, r: "immediate" },
+  { n: "Measles", k: "measles", t30: true, r: "immediate" },
+  { n: "Neonatal Tetanus", k: "tetanus", t30: true, r: "immediate" },
+  { n: "Human Influenza (New Subtype)", k: "flu", t30: true, r: "immediate" },
+  { n: "COVID-19", k: "covid", t30: true, r: "immediate" },
+  { n: "Rabies Exposure", k: "rabies", t30: true, r: "immediate" },
+  { n: "Viral Hemorrhagic Fevers", k: "vhf", t30: false, r: "immediate" },
+  { n: "Yellow Fever", k: "yf", t30: true, r: "immediate" },
+  { n: "Maternal Death", k: "mat", t30: true, r: "immediate" },
+  { n: "Perinatal Death", k: "peri", t30: true, r: "immediate" },
+  { n: "Obstetric Fistula", k: "fistula", t30: true, r: "immediate" }
 ];
 
-function initForm(){
-  renderDiseaseCards();
-  
-  // Calculate Epi Week & Date Context
-  let t = new Date();
-  let wd = (t.getDay() + 6) % 7 + 1;
-  let th = new Date(t);
-  th.setDate(t.getDate() - wd - 3);
-  
-  epiY = th.getFullYear(); 
-  let monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-  epiM = monthNames[th.getMonth()];
-  
-  let j1 = new Date(epiY, 0, 1);
-  epiW = Math.floor((Math.floor((th - j1) / 86400000) + 10) / 7);
-  if(epiW < 1) epiW = 1; 
-  if(epiW > 52) epiW = 52;
-  
-  document.getElementById('lbl_y').textContent = epiY;
-  document.getElementById('lbl_m').textContent = epiM;
-  document.getElementById('lbl_w').textContent = epiW;
-  
-  loadFacilities();
+let sel={},facList=[],currentZone='',currentWoreda='',epiY,epiM,epiW,currentWoredaId='',isEditMode=false,lastSubmittedFacility='',isAlreadySubmitted=false;
+const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+function init(){
+  let t=new Date(),wd=(t.getDay()+6)%7+1,th=new Date(t);th.setDate(t.getDate()-wd-3);
+  epiY=th.getFullYear();epiM=MONTHS[th.getMonth()];let j1=new Date(epiY,0,1);
+  epiW=Math.floor((Math.floor((th-j1)/86400000)+10)/7);if(epiW<1)epiW=1;if(epiW>52)epiW=52;
+  document.getElementById('lbl_y').textContent=epiY;document.getElementById('lbl_m').textContent=epiM;document.getElementById('lbl_w').textContent=epiW;
+  renderTags();loadFacilities();loadMetrics();
 }
 
-function parseCSV(str) {
-  let result = [], row = [], field = '', inQ = false;
-  for (let i = 0; i < str.length; i++) {
-    let c = str[i], nc = str[i+1];
-    if (inQ) {
-      if (c === '"' && nc === '"') { field += '"'; i++; }
-      else if (c === '"') { inQ = false; }
-      else { field += c; }
-    } else {
-      if (c === '"') { inQ = true; }
-      else if (c === ',') { row.push(field.trim()); field = ''; }
-      else if (c === '\n' || c === '\r') {
-        if (c === '\r' && nc === '\n') i++;
-        if (field || row.length > 0) { row.push(field.trim()); result.push(row); row = []; field = ''; }
-      } else { field += c; }
-    }
-  }
-  if (field || row.length > 0) { row.push(field.trim()); result.push(row); }
-  return result;
-}
+function parseCSV(s){let r=[],row=[],f='',q=false;for(let i=0;i<s.length;i++){let c=s[i],n=s[i+1];if(q){if(c==='"'){if(n==='"'){f+='"';i++;}else q=false;}else f+=c;}else{if(c==='"')q=true;else if(c===','){row.push(f.trim());f='';}else if(c==='\n'||c==='\r'){if(c==='\r'&&n==='\n')i++;row.push(f.trim());if(row.some(x=>x!==''))r.push(row);row=[];f='';}else f+=c;}}if(f||row.length){row.push(f.trim());r.push(row);}return r;}
 
 function loadFacilities(){
   fetch('https://docs.google.com/spreadsheets/d/1H35dwM2pQO6pdycz-HcOKXiVlL10GXZX9Vvme4CLzQE/gviz/tq?tqx=out:csv&sheet=MFR%20Facility%20List')
-  .then(r => r.text())
-  .then(csv => {
-    let rows = parseCSV(csv);
-    let hdr = rows[0];
-    let cid = hdr.indexOf('Woreda ID'), cz = hdr.indexOf('Zone'), cw = hdr.indexOf('Woreda');
-    let cf = hdr.indexOf('Health_Facility'), ct = hdr.indexOf('Facility Type');
-    let co = hdr.indexOf('Ownership'), cs = hdr.indexOf('Operational Status');
-    
-    facList = [];
-    for(let i = 1; i < rows.length; i++){
-      let c = rows[i];
-      if(c.length < 4) continue;
-      
-      let type = (c[ct] || '').toLowerCase().trim();
-      let owner = (c[co] || '').toLowerCase().trim();
-      let status = (c[cs] || '').toLowerCase().trim();
-      
-      // Filter: Operational + Health Center + Public/Gov
-      if(status.includes('operational') && type.includes('health center') && (owner.includes('public') || owner.includes('gov'))){
-        facList.push({ id: c[cid], zone: c[cz], woreda: c[cw], fac: c[cf] });
-      }
+  .then(r=>r.text()).then(csv=>{
+    let rows=parseCSV(csv),hdr=rows[0],cid=hdr.indexOf('Woreda ID'),cz=hdr.indexOf('Zone'),cw=hdr.indexOf('Woreda'),cf=hdr.indexOf('Health_Facility'),ct=hdr.indexOf('Facility Type'),co=hdr.indexOf('Ownership'),cs=hdr.indexOf('Operational Status');
+    facList=[];for(let i=1;i<rows.length;i++){let c=rows[i];if(c.length<4)continue;let ty=(c[ct]||'').toLowerCase(),ow=(c[co]||'').toLowerCase(),st=(c[cs]||'').toLowerCase();if(st.includes('operational')&&ty.includes('health center')&&(ow.includes('public')||ow.includes('gov')))facList.push({id:c[cid],zone:c[cz],woreda:c[cw],fac:c[cf]});}
+  }).catch(()=>msg('Could not load facilities','e'));
+}
+
+function loadMetrics(){
+  fetch(SCRIPT_API_URL+'?action=getMetrics&week='+epiW+'&year='+epiY)
+  .then(r=>r.json()).then(data=>{
+    if(data.status==='success'){
+      let comp=data.completeness||0,time=data.timeliness||0;
+      document.getElementById('agg_comp').textContent=comp+'%';
+      document.getElementById('agg_time').textContent=time+'%';
+      document.getElementById('navGauge').style.setProperty('--comp',comp+'%');
+      document.getElementById('navCompText').textContent=comp+'%';
     }
-  }).catch(() => msg('System Notice: Could not connect to Master Facility List', 'w'));
+  }).catch(()=>{});
 }
 
-function renderDiseaseCards() {
-  let container = document.getElementById('diseaseCards');
-  let html = '';
-  
-  DISEASES.forEach(d => {
-    let row30m = d.t30 
-      ? `<div class="f-col"><label>Within 30 mins</label><input type="number" id="${d.k}_30m" value="0" min="0" step="1" oninput="calculateAndValidate()"></div>`
-      : `<input type="hidden" id="${d.k}_30m" value="0">`;
-
-    html += `
-    <div class="card">
-      <div class="card-header">${d.n}</div>
-      <div class="card-body">
-        <div class="f-row">
-          <div class="f-col">
-            <label>From community</label>
-            <input type="number" id="${d.k}_comm" value="0" min="0" step="1" oninput="calculateAndValidate()">
-          </div>
-          <div class="f-col">
-            <label>Fulfilling case def.</label>
-            <input type="number" id="${d.k}_def" value="0" min="0" step="1" oninput="calculateAndValidate()">
-          </div>
-          ${row30m}
-        </div>
-        <div class="error-msg" id="${d.k}_err">Data Error: Community count must be ≥ Case Def count${d.t30 ? ' ≥ 30 Min count' : ''}.</div>
-      </div>
-    </div>`;
-  });
-  container.innerHTML = html;
-}
+function renderTags(){document.getElementById('at').innerHTML=DISEASES.map(d=>{let s=sel[d.k]!==undefined;return'<span class="tag '+d.r+(s?' sel':'')+'" onclick="togD(\''+d.k+'\')">'+d.n+'</span>';}).join('');}
+function togD(k){if(sel[k]!==undefined)delete sel[k];else sel[k]={};renderTags();renderST();renderCards();calculateAndValidate();updateSections();}
+function renderST(){let k=Object.keys(sel);document.getElementById('st').innerHTML=k.length?k.map(x=>{let d=DISEASES.find(y=>y.k===x);return'<span class="tag '+d.r+' sel" onclick="togD(\''+x+'\')">'+d.n+' ✕</span>';}).join(''):'<span style="color:#94a3b8;font-size:13px">No diseases selected — click tags above</span>';}
+function fil(){let q=document.getElementById('sq').value.toLowerCase();document.getElementById('at').innerHTML=DISEASES.filter(d=>d.n.toLowerCase().includes(q)).map(d=>{let s=sel[d.k]!==undefined;return'<span class="tag '+d.r+(s?' sel':'')+'" onclick="togD(\''+d.k+'\')">'+d.n+'</span>';}).join('');}
+function renderCards(){let k=Object.keys(sel),c=document.getElementById('dc');if(!k.length){c.innerHTML='';return;}c.innerHTML=k.map(x=>{let d=DISEASES.find(y=>y.k===x);let t30=d.t30?'<div class="f-col"><label>Done within 30 min</label><input type="number" id="'+d.k+'_30m" value="0" oninput="calculateAndValidate()"></div>':'<input type="hidden" id="'+d.k+'_30m" value="0">';return'<div class="card"><div class="card-header" onclick="this.nextElementSibling.classList.toggle(\'hide\')"><span>'+d.n+'</span></div><div class="card-body"><div class="f-row"><div class="f-col wide"><label>Notifications from community</label><input type="number" id="'+d.k+'_comm" value="0" oninput="calculateAndValidate()"></div><div class="f-col wide"><label>Fulfilling case definition</label><input type="number" id="'+d.k+'_def" value="0" oninput="calculateAndValidate()"></div>'+t30+'</div><div class="error-msg" id="'+d.k+'_err">Error: Community ≥ Case Def'+ (d.t30?' ≥ 30 Min':'') +'</div><div class="zero-error" id="'+d.k+'_zero">⚠️ Please enter a number greater than 0</div></div></div>';}).join('');}
+function updateSections(){let k=Object.keys(sel);document.getElementById('rumorSection').style.display=k.length?'block':'none';document.getElementById('totalsSection').style.display=k.length?'block':'none';}
 
 function validateWoreda(){
-  let id = document.getElementById('woredaInput').value.trim();
-  let hint = document.getElementById('woredaHint');
+  let id=document.getElementById('woredaInput').value.trim(),hint=document.getElementById('woredaHint');
+  document.getElementById('fs').innerHTML='<option value="">Select Facility</option>';document.getElementById('fs').disabled=true;
+  document.getElementById('zf').value='';document.getElementById('wf').value='';calculateAndValidate();
+  document.getElementById('facilityLockedMsg').classList.remove('show');isEditMode=false;isAlreadySubmitted=false;
+  sel={};renderTags();renderST();renderCards();updateSections();
+  if(!id){hint.innerHTML='';return;}
+  let facs=facList.filter(f=>f.id===id);
+  if(facs.length){
+    hint.innerHTML='✔ Valid Woreda';hint.className='woreda-hint woreda-valid';currentZone=facs[0].zone;currentWoreda=facs[0].woreda;currentWoredaId=id;
+    document.getElementById('zf').value=currentZone;document.getElementById('wf').value=currentWoreda;
+    facs.forEach(f=>{let o=document.createElement('option');o.value=f.fac;o.textContent=f.fac;document.getElementById('fs').appendChild(o);});
+    document.getElementById('fs').disabled=false;
+    if(facs.length===1){document.getElementById('fs').value=facs[0].fac;onFacilityChange();}
+  }else{hint.innerHTML='✖ Not found';hint.className='woreda-hint woreda-invalid';}
+}
+
+function onFacilityChange(){
+  let fname=document.getElementById('fs').value;
+  document.getElementById('facilityLockedMsg').classList.remove('show');
+  isEditMode=false;isAlreadySubmitted=false;
+  sel={};renderTags();renderST();renderCards();updateSections();calculateAndValidate();
+  document.getElementById('submitBtn').disabled=false;document.getElementById('submitBtn').textContent='Submit Report';
+  document.getElementById('editBtn').disabled=true;
+  if(!fname)return;
   
-  document.getElementById('fs').innerHTML = '<option value="">Select Facility</option>';
-  document.getElementById('fs').disabled = true;
-  document.getElementById('zf').value = '';
-  document.getElementById('wf').value = '';
-  calculateAndValidate(); // Lock submit button
+  fetch(SCRIPT_API_URL+'?action=checkDuplicate&zone='+encodeURIComponent(currentZone)+'&woreda='+encodeURIComponent(currentWoreda)+'&facility='+encodeURIComponent(fname)+'&week='+epiW+'&year='+epiY)
+  .then(r=>r.json()).then(res=>{
+    if(res.exists){
+      isAlreadySubmitted=true;lastSubmittedFacility=fname;
+      document.getElementById('lockedFacilityName').textContent=fname;
+      document.getElementById('facilityLockedMsg').classList.add('show');
+      document.getElementById('submitBtn').disabled=true;
+      document.getElementById('editBtn').disabled=false;
+      loadExistingRecord(fname);
+    }else{
+      isAlreadySubmitted=false;lastSubmittedFacility=fname;
+      document.getElementById('editBtn').disabled=true;
+    }
+  }).catch(()=>{});
+}
+
+function loadExistingRecord(fname){
+  fetch(SCRIPT_API_URL+'?action=getRecord&zone='+encodeURIComponent(currentZone)+'&woreda='+encodeURIComponent(currentWoreda)+'&facility='+encodeURIComponent(fname)+'&week='+epiW+'&year='+epiY)
+  .then(r=>r.json()).then(res=>{
+    if(res.status==='success' && res.record){
+      let r=res.record,headers=res.headers;
+      sel={};
+      DISEASES.forEach(d=>{
+        let commCol=hdrIndex(headers,'Tot_no_'+d.k+'_notif');
+        let defCol=hdrIndex(headers,'Tot_no_'+d.k+'_fulf');
+        if(commCol!==-1 && (parseInt(r[commCol])>0 || parseInt(r[defCol])>0)) sel[d.k]={};
+      });
+      renderTags();renderST();renderCards();updateSections();
+      setTimeout(()=>{
+        DISEASES.forEach(d=>{
+          if(sel[d.k]!==undefined){
+            let commCol=hdrIndex(headers,'Tot_no_'+d.k+'_notif');
+            let defCol=hdrIndex(headers,'Tot_no_'+d.k+'_fulf');
+            let t30Col=hdrIndex(headers,'Tot_no_'+d.k+'_30min');
+            if(commCol!==-1) document.getElementById(d.k+'_comm').value=r[commCol]||0;
+            if(defCol!==-1) document.getElementById(d.k+'_def').value=r[defCol]||0;
+            if(t30Col!==-1 && d.t30) document.getElementById(d.k+'_30m').value=r[t30Col]||0;
+          }
+        });
+        let rcvCol=hdrIndex(headers,'Notif_recveived_6406');
+        let invCol=hdrIndex(headers,'Notif_investig_6406');
+        let unuCol=hdrIndex(headers,'Unusual_health_event');
+        if(rcvCol!==-1) document.getElementById('rumor_rcv').value=r[rcvCol]||0;
+        if(invCol!==-1) document.getElementById('rumor_inv').value=r[invCol]||0;
+        if(unuCol!==-1) document.getElementById('unusual_ev').value=r[unuCol]||'';
+        calculateAndValidate();
+      },200);
+    }
+  });
+}
+
+function hdrIndex(headers,search){
+  if(!headers) return -1;
+  let s=search.toLowerCase().replace(/_/g,'');
+  for(let i=0;i<headers.length;i++){
+    if(headers[i] && headers[i].toLowerCase().replace(/_/g,'')===s) return i;
+  }
+  return -1;
+}
+
+function editRecord(){
+  isEditMode=true;isAlreadySubmitted=false;
+  document.getElementById('facilityLockedMsg').classList.remove('show');
+  document.querySelector('input[name="ct"][value="cases"]').checked=true;
+  tog();
+  document.getElementById('submitBtn').disabled=false;
+  document.getElementById('submitBtn').textContent='Update Report';
+  document.getElementById('editBtn').disabled=true;
+  if(lastSubmittedFacility) loadExistingRecord(lastSubmittedFacility);
+}
+
+function calculateAndValidate(){
+  let tc=0,td=0,tt=0,allValid=true,hasNonZero=false;
+  let fs=document.getElementById('fs').value!=='',btn=document.getElementById('submitBtn');
   
-  if(!id) { hint.innerHTML = 'Type your facility Woreda ID'; hint.className = 'hint'; return; }
+  if(!fs){btn.textContent='Select Facility to Submit';btn.disabled=true;return;}
+  if(!isEditMode){btn.textContent='Submit Report';btn.disabled=true;}
   
-  let facs = facList.filter(f => f.id === id);
-  if(facs.length > 0){
-    hint.innerHTML = '✔ Valid Woreda Found'; hint.className = 'hint hint-valid';
-    currentZone = facs[0].zone; currentWoreda = facs[0].woreda;
-    document.getElementById('zf').value = currentZone;
-    document.getElementById('wf').value = currentWoreda;
+  DISEASES.forEach(d=>{
+    if(sel[d.k]===undefined)return;
+    let comm=parseInt(document.getElementById(d.k+'_comm')?.value)||0;
+    let def=parseInt(document.getElementById(d.k+'_def')?.value)||0;
+    let t30=parseInt(document.getElementById(d.k+'_30m')?.value)||0;
+    let errEl=document.getElementById(d.k+'_err');
+    let zeroEl=document.getElementById(d.k+'_zero');
+    let isValid=true;
     
-    facs.forEach(f => {
-      let opt = document.createElement('option');
-      opt.value = f.fac; opt.textContent = f.fac;
-      document.getElementById('fs').appendChild(opt);
+    // Check: must be greater than 0
+    if(comm===0 && def===0 && (!d.t30 || t30===0)){
+      isValid=false;
+      if(zeroEl) zeroEl.classList.add('show');
+    }else{
+      hasNonZero=true;
+      if(zeroEl) zeroEl.classList.remove('show');
+    }
+    
+    // Check: community >= case def >= 30min
+    if(comm<def){isValid=false;if(errEl)errEl.classList.add('show');}else{if(errEl)errEl.classList.remove('show');}
+    if(d.t30&&def<t30){isValid=false;if(errEl)errEl.classList.add('show');}else{if(errEl&&comm>=def)errEl.classList.remove('show');}
+    
+    if(!isValid) allValid=false;
+    tc+=comm;td+=def;tt+=t30;
+  });
+
+  document.getElementById('tot_comm').value=tc;
+  document.getElementById('tot_def').value=td;
+  document.getElementById('tot_30m').value=tt;
+  
+  let keysCount=Object.keys(sel).length;
+  btn.disabled=!(allValid && hasNonZero && keysCount>0);
+}
+
+function tog(){document.getElementById('ds').style.display=document.querySelector('input[name="ct"]:checked').value==='nocases'?'none':'block';}
+
+function sub(){
+  let f=document.getElementById('fs').value;
+  if(!f)return msg('Select a facility','e');
+  
+  // STRICT DUPLICATE CHECK BEFORE SUBMISSION
+  if(!isEditMode && isAlreadySubmitted){
+    return msg('❌ This facility has already submitted for this week. Use Edit Record instead.','e');
+  }
+  
+  let no=document.querySelector('input[name="ct"]:checked').value==='nocases';
+  
+  // Validate all selected diseases have values > 0
+  if(!no){
+    let zeroFields=[];
+    DISEASES.forEach(d=>{
+      if(sel[d.k]===undefined)return;
+      let comm=parseInt(document.getElementById(d.k+'_comm')?.value)||0;
+      let def=parseInt(document.getElementById(d.k+'_def')?.value)||0;
+      if(comm===0 && def===0){
+        zeroFields.push(d.n);
+      }
     });
-    document.getElementById('fs').disabled = false;
-  } else {
-    hint.innerHTML = '✖ ID not found or no Public Health Centers listed'; hint.className = 'hint hint-invalid';
+    if(zeroFields.length>0){
+      return msg('⚠️ Please enter numbers greater than 0 for: '+zeroFields.join(', '),'e');
+    }
   }
-}
-
-function onFacilityChange() {
-  calculateAndValidate();
-}
-
-function calculateAndValidate() {
-  let totComm = 0, totDef = 0, tot30m = 0;
-  let allValid = true;
-
-  let facilitySelected = document.getElementById('fs').value !== '';
-  let btn = document.getElementById('submitBtn');
   
-  if (!facilitySelected) {
-    allValid = false;
-    btn.textContent = 'Select a Facility to Submit';
-  } else {
-    btn.textContent = 'Submit Data to System';
-  }
-
-  DISEASES.forEach(d => {
-    let comm = parseInt(document.getElementById(d.k + '_comm').value) || 0;
-    let def = parseInt(document.getElementById(d.k + '_def').value) || 0;
-    let t30 = parseInt(document.getElementById(d.k + '_30m').value) || 0;
-    let errEl = document.getElementById(d.k + '_err');
-    
-    // Core Logic Requirement
-    let isValid = true;
-    if (comm < def) isValid = false;
-    if (d.t30 && def < t30) isValid = false;
-    
-    if (!isValid) {
-      allValid = false;
-      errEl.style.display = 'block';
-      document.getElementById(d.k + '_comm').classList.add('input-error');
-      document.getElementById(d.k + '_def').classList.add('input-error');
-      if (d.t30) document.getElementById(d.k + '_30m').classList.add('input-error');
-    } else {
-      errEl.style.display = 'none';
-      document.getElementById(d.k + '_comm').classList.remove('input-error');
-      document.getElementById(d.k + '_def').classList.remove('input-error');
-      if (d.t30) document.getElementById(d.k + '_30m').classList.remove('input-error');
-    }
-
-    totComm += comm;
-    totDef += def;
-    tot30m += t30;
-  });
-
-  document.getElementById('tot_comm').value = totComm;
-  document.getElementById('tot_def').value = totDef;
-  document.getElementById('tot_30m').value = tot30m;
-
-  if(allValid) btn.disabled = false;
-  else btn.disabled = true;
-}
-
-function submitData() {
-  let facility = document.getElementById('fs').value;
-  if(!facility) return msg('Please select a valid health facility', 'e');
-
-  let payload = {
-    action: 'submitCommunityData',
-    Region: 'Addis Ababa',
-    SubCity: currentZone,
-    Woreda: currentWoreda,
-    FacilityName: facility,
-    FacilityType: 'Health Center',
-    Ownership: 'Public/Government',
-    Year: epiY,
-    Month: epiM,
-    EpiWeek: epiW,
-    Data: {}
+  let p={
+    action:isEditMode?'editRecord':'submitCommunityData',
+    Region:'Addis Ababa',SubCity:currentZone,Woreda:currentWoreda,FacilityName:f,
+    Year:epiY,Month:epiM,EpiWeek:epiW,NoCases:no?'true':'false',Data:{}
   };
-
-  DISEASES.forEach(d => {
-    payload.Data[d.k] = {
-      comm: document.getElementById(d.k + '_comm').value,
-      def: document.getElementById(d.k + '_def').value,
-      t30: d.t30 ? document.getElementById(d.k + '_30m').value : 0
+  
+  if(!no){
+    DISEASES.forEach(d=>{
+      if(sel[d.k]===undefined)return;
+      p.Data[d.k]={
+        comm:parseInt(document.getElementById(d.k+'_comm')?.value)||0,
+        def:parseInt(document.getElementById(d.k+'_def')?.value)||0,
+        t30:d.t30?(parseInt(document.getElementById(d.k+'_30m')?.value)||0):0
+      };
+    });
+    p.Data.rumors={
+      received:parseInt(document.getElementById('rumor_rcv')?.value)||0,
+      investigated:parseInt(document.getElementById('rumor_inv')?.value)||0,
+      unusual:document.getElementById('unusual_ev')?.value||''
     };
-  });
-
-  payload.Data.rumors = {
-    received: document.getElementById('rumor_rcv').value,
-    investigated: document.getElementById('rumor_inv').value,
-    unusual: document.getElementById('unusual_ev').value
-  };
-
-  let btn = document.getElementById('submitBtn');
-  btn.disabled = true;
-  btn.textContent = 'Processing Submission...';
-
-  // =========================================================================
-  // THIS IS WHERE YOUR SCRIPT URL IS USED
-  // We use text/plain to bypass the CORS preflight check on GitHub Pages
-  // =========================================================================
-  fetch(SCRIPT_API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify(payload)
-  })
-  .then(response => response.json())
-  .then(data => {
-    if(data.status === 'success') { 
-      msg('Success! Data submitted safely to database.', 's');
-      if (typeof confetti === 'function') confetti({ particleCount: 180, spread: 90, origin: { y: 0.6 }});
-      setTimeout(() => { location.reload(); }, 3500);
-    } else {
-      msg('Server Error: ' + data.message, 'e');
-      btn.textContent = 'Submit Data to System';
-      btn.disabled = false;
+  }
+  
+  let btn=document.getElementById('submitBtn');
+  btn.disabled=true;btn.textContent='Processing...';
+  
+  fetch(SCRIPT_API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(p)})
+  .then(r=>r.json()).then(res=>{
+    if(res.status==='success'){
+      msg(isEditMode?'✓ Record updated!':'✓ Submitted successfully!','s');
+      if(typeof confetti==='function')confetti({particleCount:150,spread:80,origin:{y:0.6}});
+      loadMetrics();
+      isAlreadySubmitted=true;isEditMode=false;
+      lastSubmittedFacility=f;
+      document.getElementById('lockedFacilityName').textContent=f;
+      document.getElementById('facilityLockedMsg').classList.add('show');
+      document.getElementById('submitBtn').disabled=true;
+      document.getElementById('editBtn').disabled=false;
+    }else if(res.status==='duplicate'){
+      msg('❌ Duplicate detected! This facility already submitted for Week '+epiW+'. Use Edit Record.','e');
+      isAlreadySubmitted=true;
+      document.getElementById('lockedFacilityName').textContent=f;
+      document.getElementById('facilityLockedMsg').classList.add('show');
+      document.getElementById('submitBtn').disabled=true;
+      document.getElementById('editBtn').disabled=false;
+    }else{
+      msg('Error: '+res.message,'e');
+      btn.disabled=false;btn.textContent=isEditMode?'Update Report':'Submit Report';
     }
-  })
-  .catch(error => {
-    msg('Connection Error: Could not reach Google Servers. Check CORS/Deployment.', 'e');
-    btn.textContent = 'Submit Data to System';
-    btn.disabled = false;
+  }).catch(()=>{
+    msg('Network error','e');
+    btn.disabled=false;btn.textContent=isEditMode?'Update Report':'Submit Report';
   });
 }
 
-function msg(text, type) {
-  let m = document.getElementById('msg');
-  m.innerHTML = '<span>' + text + '</span>';
-  m.className = 'msg ' + type + ' show';
-  setTimeout(() => { m.className = 'msg ' + type; }, 4500);
+function viewData(){
+  if(!currentWoredaId)return msg('Enter Woreda ID first','e');
+  let f=document.getElementById('fs').value||'';
+  fetch(SCRIPT_API_URL+'?action=getData&woreda='+encodeURIComponent(currentWoreda)+'&week='+epiW+'&year='+epiY+'&facility='+encodeURIComponent(f))
+  .then(r=>r.json()).then(res=>{
+    document.getElementById('viewTitle').textContent=(f||currentWoreda)+' - Week '+epiW+' '+epiY;
+    if(res.headers && res.rows){
+      document.getElementById('viewHead').innerHTML='<tr>'+res.headers.map(h=>'<th>'+h+'</th>').join('')+'</tr>';
+      document.getElementById('viewBody').innerHTML=res.rows.length?res.rows.map(r=>'<tr>'+r.map(c=>'<td>'+(c||'')+'</td>').join('')+'</tr>').join(''):'<tr><td colspan="100" style="text-align:center;padding:20px;color:#94a3b8">No data found</td></tr>';
+    }
+    document.getElementById('viewModal').classList.add('show');
+  });
 }
 
-// Safely initialize when DOM is ready
-window.addEventListener('DOMContentLoaded', initForm);
-</script>
+function showExport(){
+  if(!currentWoredaId)return msg('Enter Woreda ID first','e');
+  let f=document.getElementById('fs').value||'';
+  window.open(SCRIPT_API_URL+'?action=exportCSV&woreda='+encodeURIComponent(currentWoreda)+'&week='+epiW+'&year='+epiY+'&facility='+encodeURIComponent(f),'_blank');
+}
 
+function resetAll(){
+  sel={};renderTags();renderST();renderCards();updateSections();calculateAndValidate();
+  document.getElementById('unusual_ev').value='';
+  document.querySelector('input[name="ct"][value="cases"]').checked=true;tog();
+  isEditMode=false;isAlreadySubmitted=false;
+  document.getElementById('facilityLockedMsg').classList.remove('show');
+  document.getElementById('editBtn').disabled=true;
+  document.getElementById('submitBtn').textContent='Select Facility to Submit';
+}
+
+function msg(t,ty){
+  let m=document.getElementById('msg');
+  m.innerHTML='<span>'+t+'</span>';
+  m.className='msg '+ty+' show';
+  clearTimeout(m._timeout);
+  m._timeout=setTimeout(()=>{m.className='msg '+ty;},4000);
+}
+
+window.addEventListener('DOMContentLoaded',init);
+</script>
 </body>
 </html>
