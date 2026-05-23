@@ -187,7 +187,10 @@
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 
 <script>
-// --- CORE CONFIGURATION ---
+// =========================================================================
+// API INTEGRATION POINT
+// This is exactly the URL you provided. It points to your Google Apps Script.
+// =========================================================================
 const SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwEWlUDyUQmQUT-5kDfgHnK3yy5_MAhuaz1IxZe7OoFR0iFYoTkBVsN9gBDN7hZbCYQ/exec";
 
 // Global Variables
@@ -452,6 +455,9 @@ function submitData() {
   btn.disabled = true;
   btn.textContent = 'Processing Submission...';
 
+  // =========================================================================
+  // THIS IS WHERE YOUR SCRIPT URL IS USED
+  // =========================================================================
   fetch(SCRIPT_API_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
