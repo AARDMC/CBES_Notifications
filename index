@@ -3,7 +3,7 @@
 <head>
   <base target="_top">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Addis Ababa PHEM - Community Notifications Form</title>
+  <title>Addis Ababa PHEM - CBES Notifications Form</title>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
@@ -70,7 +70,7 @@
     .btns{display:flex;gap:10px;margin-top:20px}
     .btn{flex:1;padding:14px;border-radius:8px;border:none;background:#4f46e5;color:white;font-weight:800;font-size:16px;cursor:pointer;transition:0.2s}
     .btn:hover{background:#4338ca}
-    .btn:disabled{opacity:0.5;cursor:not-allowed}
+    .btn:disabled{opacity:0.5;cursor:not-allowed;background:#94a3b8;}
 
     .msg {
       position: fixed; top: 25px; left: 50%; transform: translateX(-50%) translateY(-30px);
@@ -91,7 +91,7 @@
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
     </div>
     <div class="nav-title-group">
-      <div class="nav-title">Community Notifications Form</div>
+      <div class="nav-title">CBES Notifications Form</div>
       <div class="nav-subtitle">Public Health Centers - Addis Ababa</div>
     </div>
   </div>
@@ -121,7 +121,8 @@
       </div>
     </div>
 
-    <div id="formBody" style="display:none;">
+    <!-- REMOVED: display:none. The form is now always visible -->
+    <div id="formBody">
       
       <div class="section-title">Reportable Diseases & Conditions</div>
       <div class="cards" id="diseaseCards"></div>
@@ -164,7 +165,7 @@
       </div>
 
       <div class="btns">
-        <button class="btn" id="submitBtn" onclick="submitData()">Submit Form to Database</button>
+        <button class="btn" id="submitBtn" onclick="submitData()" disabled>Submit Form to Database (Select Facility First)</button>
       </div>
 
     </div>
@@ -174,7 +175,7 @@
 <div class="msg" id="msg"></div>
 
 <script>
-// THIS IS THE WEB APP URL THAT CONNECTS YOUR FRONTEND TO YOUR BACKEND
+// YOUR SPECIFIC GOOGLE SCRIPT WEB APP URL
 const SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwEWlUDyUQmQUT-5kDfgHnK3yy5_MAhuaz1IxZe7OoFR0iFYoTkBVsN9gBDN7hZbCYQ/exec";
 
 let facList = [], currentFacilities = [];
@@ -261,26 +262,31 @@ function loadFacilities(){
       var c = rows[i];
       if(c.length < 4) continue;
       
-      let type = (c[ct] || '').toLowerCase();
-      let owner = (c[co] || '').toLowerCase();
-      let status = (c[cs] || '').toLowerCase();
+      let type = (c[ct] || '').toLowerCase().trim();
+      let owner = (c[co] || '').toLowerCase().trim();
+      let status = (c[cs] || '').toLowerCase().trim();
       
-      if(status === 'operational' && type.includes('health center') && owner.includes('public/government')){
+      // RELAXED FILTER: Checks for "operational", "health center", and "public" or "gov"
+      if(status.includes('operational') && type.includes('health center') && (owner.includes('public') || owner.includes('gov'))){
         facList.push({ id: c[cid], zone: c[cz], woreda: c[cw], fac: c[cf] });
       }
     }
-  }).catch(() => msg('Could not load facilities list', 'e'));
+    
+    if(facList.length === 0) {
+        msg('Warning: Master list loaded but no Public Health Centers were found.', 'w');
+    }
+  }).catch(() => msg('Could not load Master Facility List from Google', 'e'));
 }
 
 function validateWoreda(){
   var id = document.getElementById('woredaInput').value.trim();
   var hint = document.getElementById('woredaHint');
   
-  document.getElementById('formBody').style.display = 'none';
   document.getElementById('fs').innerHTML = '<option value="">Select Facility</option>';
   document.getElementById('fs').disabled = true;
   document.getElementById('zf').value = '';
   document.getElementById('wf').value = '';
+  calculateAndValidate(); // Lock the submit button
   
   if(!id) { hint.innerHTML = 'Type a valid Woreda ID'; hint.className = 'hint'; return; }
   
@@ -303,11 +309,7 @@ function validateWoreda(){
 }
 
 function onFacilityChange() {
-  if(document.getElementById('fs').value) {
-    document.getElementById('formBody').style.display = 'block';
-  } else {
-    document.getElementById('formBody').style.display = 'none';
-  }
+  calculateAndValidate(); // Unlocks submit button if valid
 }
 
 function renderDiseaseCards() {
@@ -346,6 +348,16 @@ function calculateAndValidate() {
   let totComm = 0, totDef = 0, tot30m = 0;
   let allValid = true;
 
+  // 1. Check if a facility is selected
+  let facilitySelected = document.getElementById('fs').value !== '';
+  if (!facilitySelected) {
+    allValid = false;
+    document.getElementById('submitBtn').textContent = 'Submit Form to Database (Select Facility First)';
+  } else {
+    document.getElementById('submitBtn').textContent = 'Submit Form to Database';
+  }
+
+  // 2. Validate disease logics
   DISEASES.forEach(d => {
     let comm = parseInt(document.getElementById(d.k + '_comm').value) || 0;
     let def = parseInt(document.getElementById(d.k + '_def').value) || 0;
@@ -380,6 +392,7 @@ function calculateAndValidate() {
   document.getElementById('tot_def').value = totDef;
   document.getElementById('tot_30m').value = tot30m;
 
+  // Toggle button based on overall validity
   document.getElementById('submitBtn').disabled = !allValid;
 }
 
