@@ -154,7 +154,7 @@
     </div>
 
     <div class="facility-locked" id="facilityLockedMsg">
-      <span id="lockedFacilityName"></span> has already submitted for this week.
+      <span id="lockedFacilityName"></span> has already submitted a manual report for this week.
       <button class="edit-btn" id="editBtn" onclick="editRecord()">✏️ Edit Record</button>
     </div>
 
@@ -325,7 +325,7 @@ function init() {
     document.getElementById('lbl_w').textContent = epiW;
     
     renderTags(); loadFacilities();
-  } catch (e) { console.error(e); }
+  } catch (e) { msg('❌ Failed to load application date parameters. Please refresh the page.', 'e'); }
 }
 
 function parseCSV(s) {
@@ -370,7 +370,7 @@ function loadFacilities() {
       document.getElementById('navGauge').style.setProperty('--comp', '0%');
       document.getElementById('navCompText').textContent = '0%';
     })
-    .catch(() => msg('Could not load facilities list.', 'e'));
+    .catch(() => msg('❌ Unable to load the health facilities list. Please check your internet connection.', 'e'));
 }
 
 function loadMetrics() {
@@ -384,8 +384,6 @@ function loadMetrics() {
   
   let facs = facList.filter(f => f.id === currentWoredaId);
   let fName = document.getElementById('fs').value;
-  
-  // If specific facility selected -> evaluates out of 1. If not -> evaluates out of total in Woreda.
   let expected = fName ? 1 : (facs.length > 0 ? facs.length : 1);
   let wParam = '&woreda=' + encodeURIComponent(submitWoreda);
   let fParam = fName ? '&facility=' + encodeURIComponent(fName) : '';
@@ -400,7 +398,7 @@ function loadMetrics() {
         document.getElementById('navGauge').style.setProperty('--comp', comp + '%');
         document.getElementById('navCompText').textContent = comp + '%';
       }
-    }).catch(err => console.error("Metric fetch failed.", err));
+    }).catch(err => msg('❌ Failed to fetch Key Performance Indicators.', 'e'));
 }
 
 function renderTags() {
@@ -533,7 +531,6 @@ function onFacilityChange() {
   document.getElementById('submitBtn').textContent = 'Submit Report';
   document.getElementById('editBtn').disabled = true;
   
-  // Important: Automatically scopes KPI gauge to specifically this selected facility
   loadMetrics();
   
   if (!fname) return;
@@ -541,19 +538,23 @@ function onFacilityChange() {
   fetch(SCRIPT_API_URL + '?action=checkDuplicate&zone=' + encodeURIComponent(currentZone) + '&woreda=' + encodeURIComponent(submitWoreda) + '&facility=' + encodeURIComponent(fname) + '&week=' + epiW + '&year=' + epiY)
     .then(r => r.json())
     .then(res => {
-      if (res.exists) {
+      if (res.exists && !res.isAutoPopulated) {
         isAlreadySubmitted = true; lastSubmittedFacility = fname;
         document.getElementById('lockedFacilityName').textContent = fname;
         document.getElementById('facilityLockedMsg').classList.add('show');
         document.getElementById('submitBtn').disabled = true;
         document.getElementById('editBtn').disabled = false;
         loadExistingRecord(fname);
+      } else if (res.exists && res.isAutoPopulated) {
+        // Exists, but auto-populated. Show no locking message, let user naturally submit to overwrite!
+        isAlreadySubmitted = false; lastSubmittedFacility = '';
+        document.getElementById('editBtn').disabled = true;
       } else {
         isAlreadySubmitted = false; lastSubmittedFacility = fname;
         document.getElementById('editBtn').disabled = true;
       }
     })
-    .catch(err => console.error("Duplicate check failed", err));
+    .catch(err => msg('❌ Failed to check submission status. Please check connection.', 'e'));
 }
 
 function loadExistingRecord(fname) {
@@ -653,8 +654,8 @@ function tog() {
 
 function sub() {
   let f = document.getElementById('fs').value;
-  if (!f) return msg('Select a facility', 'e');
-  if (!isEditMode && isAlreadySubmitted) return msg('❌ This facility has already submitted. Use Edit Record instead.', 'e');
+  if (!f) return msg('⚠️ Please select a Health Center Name from the dropdown before submitting.', 'e');
+  if (!isEditMode && isAlreadySubmitted) return msg('⚠️ This facility already has a manual report for this week. Please click "✏️ Edit Record" to update it.', 'e');
   
   let no = document.querySelector('input[name="ct"]:checked').value === 'nocases';
   let p = {
@@ -686,7 +687,7 @@ function sub() {
     .then(r => r.json())
     .then(res => {
       if (res.status === 'success') {
-        msg(isEditMode ? '✓ Record updated!' : '✓ Submitted successfully!', 's');
+        msg(isEditMode ? '✅ Success! The manual report for ' + f + ' has been updated.' : '✅ Success! The manual report for ' + f + ' has been submitted.', 's');
         if (typeof confetti === 'function') confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
         loadMetrics(); 
         isAlreadySubmitted = true; isEditMode = false; lastSubmittedFacility = f;
@@ -694,14 +695,14 @@ function sub() {
         document.getElementById('facilityLockedMsg').classList.add('show');
         document.getElementById('submitBtn').disabled = true; document.getElementById('editBtn').disabled = false;
       } else {
-        msg('Error: ' + res.message, 'e');
+        msg('❌ Submission failed: ' + res.message, 'e');
         btn.disabled = false; btn.textContent = isEditMode ? 'Update Report' : 'Submit Report';
       }
-    }).catch(() => { msg('Network error.', 'e'); btn.disabled = false; btn.textContent = isEditMode ? 'Update Report' : 'Submit Report'; });
+    }).catch(() => { msg('❌ Network error. Please check your connection and try again.', 'e'); btn.disabled = false; btn.textContent = isEditMode ? 'Update Report' : 'Submit Report'; });
 }
 
 function viewData() {
-  if (!currentWoredaId) return msg('Enter Woreda ID first', 'e');
+  if (!currentWoredaId) return msg('⚠️ Please enter a valid Woreda ID to view data.', 'e');
   let f = document.getElementById('fs').value || '';
   
   fetch(SCRIPT_API_URL + '?action=getData&woreda=' + encodeURIComponent(submitWoreda) + '&week=' + epiW + '&year=' + epiY + '&facility=' + encodeURIComponent(f))
@@ -714,17 +715,17 @@ function viewData() {
         else document.getElementById('viewBody').innerHTML = '<tr><td colspan="100" style="text-align:center; padding:20px; color:#94a3b8;">No data found</td></tr>';
       }
       document.getElementById('viewModal').classList.add('show');
-    }).catch(() => msg('Could not load data', 'e'));
+    }).catch(() => msg('❌ Failed to fetch data. Please try again later.', 'e'));
 }
 
 function showExport() {
-  if (!currentWoredaId) return msg('Enter Woreda ID first', 'e');
+  if (!currentWoredaId) return msg('⚠️ Please enter a valid Woreda ID to export data.', 'e');
   let f = document.getElementById('fs').value || '';
   window.open(SCRIPT_API_URL + '?action=exportCSV&woreda=' + encodeURIComponent(submitWoreda) + '&week=' + epiW + '&year=' + epiY + '&facility=' + encodeURIComponent(f), '_blank');
 }
 
 function bulkZeroSubmit() {
-  if(facList.length === 0) return msg('Please wait for facilities list to load.', 'e');
+  if(facList.length === 0) return msg('⏳ Please wait a moment for the facilities list to finish loading.', 'e');
   if(!confirm(`WARNING:\n\nThis will auto-generate and submit missing facilities for Week ${epiW} as 0. Manual submissions will NOT be overwritten. Proceed?`)) return;
   
   let btn = document.getElementById('bulkZeroBtn');
@@ -741,7 +742,7 @@ function bulkZeroSubmit() {
       let missing = facList.filter(f => !submittedSet.has(f.fac.toLowerCase()));
       if (missing.length === 0) {
         btn.textContent = '🪄 Auto Populate'; btn.disabled = false;
-        return msg('All facilities have already submitted this week!', 's');
+        return msg('✅ Good news! All health facilities have already reported for Week ' + epiW + '.', 's');
       }
       
       btn.textContent = '🚀 Submitting ' + missing.length + '...';
@@ -757,14 +758,14 @@ function bulkZeroSubmit() {
         body: JSON.stringify({ action: 'bulkZeroSubmission', Year: epiY, Month: epiM, EpiWeek: epiW, Facilities: payload })
       }).then(r => r.json()).then(res => {
         if(res.status === 'success') {
-          msg(`✓ Successfully auto-populated ${missing.length} missing reports!`, 's');
+          msg(`✅ Auto-Populate Complete! ${missing.length} missing facilities were filled with 0 notifications.`, 's');
           if (typeof confetti === 'function') confetti({ particleCount: 200, spread: 100, origin: { y: 0.5 } });
           loadMetrics(); 
-        } else msg('Error: ' + res.message, 'e');
+        } else msg('❌ Submission failed: ' + res.message, 'e');
         btn.textContent = '🪄 Auto Populate'; btn.disabled = false;
       });
     }).catch(e => {
-       msg('Network error during bulk check.', 'e');
+       msg('❌ Network error while checking facilities. Please try auto-populating again.', 'e');
        btn.textContent = '🪄 Auto Populate'; btn.disabled = false;
     });
 }
