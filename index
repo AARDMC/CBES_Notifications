@@ -79,25 +79,11 @@
     .msg.s{background:linear-gradient(135deg, #059669, #10b981);}
     .msg.e{background:linear-gradient(135deg, #dc2626, #ef4444);}
     .msg.w{background:linear-gradient(135deg, #d97706, #f59e0b);}
-    
-    #error-catcher{display:none; background:#fef2f2; color:#b91c1c; padding:15px; margin-bottom:15px; border-left:4px solid #ef4444; border-radius:4px; font-size:14px;}
   </style>
-
-  <script>
-    window.onerror = function(msg, url, line) {
-      var err = document.getElementById('error-catcher');
-      if(err) {
-        err.style.display = 'block';
-        err.innerHTML = '<strong>System Alert:</strong> A script failed to load. Please refresh the page.<br><small>' + msg + ' (Line ' + line + ')</small>';
-      }
-    };
-  </script>
 </head>
 <body>
 
 <div class="container">
-  <div id="error-catcher"></div>
-  
   <div class="navbar">
     <div class="nav-logo">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
@@ -135,8 +121,7 @@
 
     <div id="formBody">
       <div class="section-title">Reportable Diseases & Conditions</div>
-      <div class="cards" id="diseaseCards">
-        </div>
+      <div class="cards" id="diseaseCards"></div>
 
       <div class="section-title">Rumors & Unusual Events</div>
       <div class="cards">
@@ -187,11 +172,10 @@
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 
 <script>
-// =========================================================================
-// API INTEGRATION POINT
-// This is exactly the URL you provided. It points to your Google Apps Script.
-// =========================================================================
-const SCRIPT_API_URL = "AKfycbwEWlUDyUQmQUT-5kDfgHnK3yy5_MAhuaz1IxZe7OoFR0iFYoTkBVsN9gBDN7hZbCYQ";
+// ====================================================================
+// CONFIGURATION - Update this URL after deploying your Google Apps Script
+// ====================================================================
+const SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwEWlUDyUQmQUT-5kDfgHnK3yy5_MAhuaz1IxZe7OoFR0iFYoTkBVsN9gBDN7hZbCYQ/exec";
 
 // Global Variables
 let facList = [];
@@ -201,7 +185,7 @@ let epiY = '';
 let epiM = '';
 let epiW = '';
 
-// Disease Configuration (t30 = requires 30-minute tracking)
+// Disease Configuration
 const DISEASES = [
   { n: "Malaria", k: "malaria", t30: false },
   { n: "Meningitis", k: "meningitis", t30: false },
@@ -232,8 +216,11 @@ const DISEASES = [
 
 function initForm(){
   renderDiseaseCards();
-  
-  // Calculate Epi Week & Date Context
+  calculateEpiWeek();
+  loadFacilities();
+}
+
+function calculateEpiWeek() {
   let t = new Date();
   let wd = (t.getDay() + 6) % 7 + 1;
   let th = new Date(t);
@@ -251,8 +238,6 @@ function initForm(){
   document.getElementById('lbl_y').textContent = epiY;
   document.getElementById('lbl_m').textContent = epiM;
   document.getElementById('lbl_w').textContent = epiW;
-  
-  loadFacilities();
 }
 
 function parseCSV(str) {
@@ -295,12 +280,11 @@ function loadFacilities(){
       let owner = (c[co] || '').toLowerCase().trim();
       let status = (c[cs] || '').toLowerCase().trim();
       
-      // Filter: Operational + Health Center + Public/Gov
       if(status.includes('operational') && type.includes('health center') && (owner.includes('public') || owner.includes('gov'))){
         facList.push({ id: c[cid], zone: c[cz], woreda: c[cw], fac: c[cf] });
       }
     }
-  }).catch(() => msg('System Notice: Could not connect to Master Facility List', 'w'));
+  }).catch(() => showMessage('Could not load facility list. Please check your connection.', 'w'));
 }
 
 function renderDiseaseCards() {
@@ -327,7 +311,7 @@ function renderDiseaseCards() {
           </div>
           ${row30m}
         </div>
-        <div class="error-msg" id="${d.k}_err">Data Error: Community count must be ≥ Case Def count${d.t30 ? ' ≥ 30 Min count' : ''}.</div>
+        <div class="error-msg" id="${d.k}_err">Error: Community count must be ≥ Case Def count${d.t30 ? ' ≥ 30 Min count' : ''}.</div>
       </div>
     </div>`;
   });
@@ -342,7 +326,7 @@ function validateWoreda(){
   document.getElementById('fs').disabled = true;
   document.getElementById('zf').value = '';
   document.getElementById('wf').value = '';
-  calculateAndValidate(); // Lock submit button
+  calculateAndValidate();
   
   if(!id) { hint.innerHTML = 'Type your facility Woreda ID'; hint.className = 'hint'; return; }
   
@@ -388,7 +372,6 @@ function calculateAndValidate() {
     let t30 = parseInt(document.getElementById(d.k + '_30m').value) || 0;
     let errEl = document.getElementById(d.k + '_err');
     
-    // Core Logic Requirement
     let isValid = true;
     if (comm < def) isValid = false;
     if (d.t30 && def < t30) isValid = false;
@@ -415,13 +398,12 @@ function calculateAndValidate() {
   document.getElementById('tot_def').value = totDef;
   document.getElementById('tot_30m').value = tot30m;
 
-  if(allValid) btn.disabled = false;
-  else btn.disabled = true;
+  btn.disabled = !allValid;
 }
 
 function submitData() {
   let facility = document.getElementById('fs').value;
-  if(!facility) return msg('Please select a valid health facility', 'e');
+  if(!facility) return showMessage('Please select a valid health facility', 'e');
 
   let payload = {
     action: 'submitCommunityData',
@@ -439,57 +421,49 @@ function submitData() {
 
   DISEASES.forEach(d => {
     payload.Data[d.k] = {
-      comm: document.getElementById(d.k + '_comm').value,
-      def: document.getElementById(d.k + '_def').value,
-      t30: d.t30 ? document.getElementById(d.k + '_30m').value : 0
+      comm: parseInt(document.getElementById(d.k + '_comm').value) || 0,
+      def: parseInt(document.getElementById(d.k + '_def').value) || 0,
+      t30: d.t30 ? (parseInt(document.getElementById(d.k + '_30m').value) || 0) : 0
     };
   });
 
   payload.Data.rumors = {
-    received: document.getElementById('rumor_rcv').value,
-    investigated: document.getElementById('rumor_inv').value,
-    unusual: document.getElementById('unusual_ev').value
+    received: parseInt(document.getElementById('rumor_rcv').value) || 0,
+    investigated: parseInt(document.getElementById('rumor_inv').value) || 0,
+    unusual: parseInt(document.getElementById('unusual_ev').value) || 0
   };
 
   let btn = document.getElementById('submitBtn');
   btn.disabled = true;
-  btn.textContent = 'Processing Submission...';
+  btn.textContent = 'Submitting...';
 
-  // =========================================================================
-  // THIS IS WHERE YOUR SCRIPT URL IS USED
-  // =========================================================================
   fetch(SCRIPT_API_URL, {
     method: 'POST',
+    mode: 'no-cors',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify(payload)
   })
-  .then(response => response.json())
-  .then(data => {
-    if(data.status === 'success') { 
-      msg('Success! Data submitted safely to database.', 's');
-      if (typeof confetti === 'function') confetti({ particleCount: 180, spread: 90, origin: { y: 0.6 }});
-      setTimeout(() => { location.reload(); }, 3500);
-    } else {
-      msg('Server Error: ' + data.message, 'e');
-      btn.textContent = 'Submit Data to System';
-      btn.disabled = false;
+  .then(() => {
+    showMessage('Data submitted successfully!', 's');
+    if (typeof confetti === 'function') {
+      confetti({ particleCount: 180, spread: 90, origin: { y: 0.6 } });
     }
+    setTimeout(() => { location.reload(); }, 3500);
   })
-  .catch(error => {
-    msg('Connection Error: Could not reach Google Servers.', 'e');
+  .catch(() => {
+    showMessage('Connection error. Please try again.', 'e');
     btn.textContent = 'Submit Data to System';
     btn.disabled = false;
   });
 }
 
-function msg(text, type) {
+function showMessage(text, type) {
   let m = document.getElementById('msg');
   m.innerHTML = '<span>' + text + '</span>';
   m.className = 'msg ' + type + ' show';
   setTimeout(() => { m.className = 'msg ' + type; }, 4500);
 }
 
-// Safely initialize when DOM is ready
 window.addEventListener('DOMContentLoaded', initForm);
 </script>
 
