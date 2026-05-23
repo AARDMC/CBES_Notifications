@@ -539,6 +539,7 @@ function onFacilityChange() {
     .then(r => r.json())
     .then(res => {
       if (res.exists && !res.isAutoPopulated) {
+        // Exists, and it's a manual report (100% complete)
         isAlreadySubmitted = true; lastSubmittedFacility = fname;
         document.getElementById('lockedFacilityName').textContent = fname;
         document.getElementById('facilityLockedMsg').classList.add('show');
@@ -546,7 +547,7 @@ function onFacilityChange() {
         document.getElementById('editBtn').disabled = false;
         loadExistingRecord(fname);
       } else if (res.exists && res.isAutoPopulated) {
-        // Exists, but auto-populated. Show no locking message, let user naturally submit to overwrite!
+        // Exists, but auto-populated (0%). It is NOT locked.
         isAlreadySubmitted = false; lastSubmittedFacility = '';
         document.getElementById('editBtn').disabled = true;
       } else {
@@ -761,7 +762,7 @@ function bulkZeroSubmit() {
           msg(`✅ Auto-Populate Complete! ${missing.length} missing facilities were filled with 0 notifications.`, 's');
           if (typeof confetti === 'function') confetti({ particleCount: 200, spread: 100, origin: { y: 0.5 } });
           loadMetrics(); 
-        } else msg('❌ Submission failed: ' + res.message, 'e');
+        } else msg('❌ Auto-Populate failed: ' + res.message, 'e');
         btn.textContent = '🪄 Auto Populate'; btn.disabled = false;
       });
     }).catch(e => {
