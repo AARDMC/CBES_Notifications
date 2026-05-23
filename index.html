@@ -6,97 +6,136 @@
   <title>Addis Ababa PHEM - CBES Notifications Form</title>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
   <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:Arial,sans-serif;background:#f0fdf4;padding:10px;font-size:16px;color:#1e293b}
-    .container{max-width:950px;margin:0 auto;background:white;border-radius:12px;padding:0;box-shadow:0 2px 12px rgba(0,0,0,0.08);}
-    .navbar{background:linear-gradient(135deg,#065f46 0%,#047857 30%,#059669 60%,#10b981 100%);padding:16px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;border-radius:12px 12px 0 0;}
-    .navbar .nav-logo{background:rgba(255,255,255,0.2);width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:white;flex-shrink:0;backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.3)}
-    .navbar .nav-title-group{flex:1;min-width:200px}
-    .navbar .nav-title{font-size:19px;font-weight:800;color:white;line-height:1.2;text-shadow:0 1px 3px rgba(0,0,0,0.2)}
-    .navbar .nav-subtitle{font-size:13px;color:rgba(255,255,255,0.85);font-weight:500;margin-top:2px}
-    .gauge-container{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.15);padding:4px 12px;border-radius:20px;backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.2);}
-    .gauge-wrapper{position:relative;width:32px;height:32px;display:flex;align-items:center;justify-content:center;}
-    .gauge-ring{position:absolute;top:0;left:0;width:100%;height:100%;border-radius:50%;background:conic-gradient(#10b981 var(--comp,0%),rgba(255,255,255,0.2) 0);-webkit-mask:radial-gradient(closest-side,transparent 75%,black 76%);mask:radial-gradient(closest-side,transparent 75%,black 76%);}
-    .gauge-text{font-size:10px;font-weight:800;color:white;position:relative;z-index:2;}
-    .gauge-label{font-size:12px;font-weight:700;color:white;}
-    .content{padding:15px}
-    .info-bar{display:flex;flex-wrap:wrap;justify-content:space-evenly;align-items:center;background:linear-gradient(to right,#059669,#10b981);color:white;padding:6px 12px;border-radius:10px;margin-bottom:12px;font-size:14px;font-weight:600;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);gap:10px;}
-    .info-bar div{display:flex;flex-direction:row;align-items:center;gap:8px;white-space:nowrap;}
-    .info-bar span{background:rgba(255,255,255,0.25);color:white;padding:4px 12px;border-radius:6px;font-size:14px;}
-    .reset-btn{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.4);color:white;padding:4px 12px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;transition:0.2s;}
-    .reset-btn:hover{background:rgba(255,255,255,0.25);}
-    .facility-sticky{position:sticky;top:0;z-index:50;background:white;padding:15px;margin:-15px -15px 15px -15px;border-bottom:1px solid #cbd5e1;box-shadow:0 4px 8px -2px rgba(0,0,0,0.08);}
-    .row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px}
-    .col{flex:1 1 150px;min-width:120px}
-    .col label{display:block;font-size:12px;font-weight:700;text-transform:uppercase;color:#475569;margin-bottom:4px}
-    .col select,.col input{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:6px;font-size:15px;background:white}
-    .col input:disabled,.col select:disabled{background:#f1f5f9}
-    .woreda-hint{font-size:12px;margin-top:3px;display:flex;align-items:center;gap:4px;} .woreda-valid{color:#10b981} .woreda-invalid{color:#ef4444}
-    .facility-locked{background:#fef3c7;border:1px solid #fcd34d;color:#92400e;padding:10px 14px;border-radius:8px;font-size:14px;font-weight:600;margin-bottom:12px;display:none;align-items:center;gap:10px;flex-wrap:wrap}
-    .facility-locked.show{display:flex}
-    .facility-locked .edit-btn{padding:6px 14px;font-size:13px;background:#92400e;color:white;border-radius:6px;cursor:pointer;font-weight:700;border:none;margin-left:auto}
-    .toggle-row{display:flex;align-items:center;gap:12px;padding:10px 12px;background:#f8fafc;border-radius:8px;margin-bottom:12px}
-    .toggle-row label{display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:600;font-size:14px}
-    .search-box{margin-bottom:8px;position:relative}
-    .search-box input{width:100%;padding:10px 10px 10px 34px;border:1.5px solid #e2e8f0;border-radius:20px;font-size:14px}
-    .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#94a3b8;}
-    .tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;min-height:24px}
-    .tag{display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border-radius:14px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid #e2e8f0;background:white;transition:0.2s}
-    .tag:hover{opacity:0.8}
-    .tag.sel{color:white}
-    .tag.immediate{border-left:4px solid #ea580c} .tag.weekly{border-left:4px solid #0891b2}
-    .tag.immediate.sel{background:#ea580c;border-color:#ea580c} .tag.weekly.sel{background:#0891b2;border-color:#0891b2}
-    .cards{margin:12px 0}
-    .card{background:white;border:1px solid #cbd5e1;border-radius:8px;margin-bottom:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.05)}
-    .card-header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:linear-gradient(135deg,#065f46,#047857);color:white;cursor:pointer;font-weight:700;font-size:15px}
-    .card-body{padding:10px 16px;background:#f8fafc} .card-body.hide{display:none}
-    .f-row{display:flex;flex-wrap:wrap;gap:6px}
-    .f-col{flex:1 1 55px} .f-col.wide{flex:2 1 100px}
-    .f-col label{font-size:9px;font-weight:800;text-transform:uppercase;color:#64748b;display:block;margin-bottom:3px}
-    .f-col input{width:100%;padding:8px 4px;border:1px solid #e2e8f0;border-radius:4px;font-size:14px;text-align:center}
-    .f-col input.input-error{border-color:#ef4444;background:#fef2f2}
-    .f-col textarea{width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:4px;font-size:13px;resize:vertical;font-family:Arial,sans-serif}
-    .f-col input[readonly]{background:#f1f5f9;font-weight:700}
-    .error-msg{color:#ef4444;font-size:11px;font-weight:600;margin-top:4px;display:none}
-    .error-msg.show{display:block}
-    .zero-error{color:#ef4444;font-size:10px;font-weight:700;margin-top:2px;display:none}
-    .zero-error.show{display:block}
-    .bottom-bar{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:15px}
-    .kpi-cards{display:flex;gap:10px;flex:1 1 auto;min-width:200px}
-    .kpi-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:12px 16px;border-radius:12px;flex:1;box-shadow:0 2px 4px rgba(0,0,0,0.05);min-width:90px}
-    .kpi-card .kpi-label{font-size:10px;font-weight:800;text-transform:uppercase;text-align:center}
-    .kpi-card .kpi-value{font-size:20px;font-weight:900}
-    .kpi-comp{background:linear-gradient(135deg,#ecfdf5,#d1fae5);border:1px solid #a7f3d0;color:#065f46}
-    .kpi-time{background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #bfdbfe;color:#1e40af}
-    .action-btns{display:flex;flex-wrap:wrap;gap:8px;flex:2 1 auto}
-    .btn{flex:1 1 auto;padding:12px 16px;border-radius:24px;border:1px solid #cbd5e1;background:white;font-weight:700;font-size:14px;cursor:pointer;text-align:center;transition:0.2s;white-space:nowrap}
-    .btn.p{background:#059669;color:white;border-color:#059669}
-    .btn:disabled{opacity:0.5;cursor:not-allowed}
-    .msg{position:fixed;top:25px;left:50%;transform:translateX(-50%) translateY(-30px);z-index:99999;padding:12px 24px;border-radius:50px;font-size:15px;font-weight:700;color:white;opacity:0;visibility:hidden;transition:0.5s;max-width:90vw}
-    .msg.show{transform:translateX(-50%) translateY(0);opacity:1;visibility:visible;}
-    .msg.s{background:#059669} .msg.e{background:#dc2626}
-    .modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;padding:15px}
-    .modal-overlay.show{display:flex}
-    .modal-content{background:white;padding:20px;border-radius:12px;max-width:950px;width:100%;max-height:90vh;overflow:auto}
-    .data-table{width:100%;border-collapse:collapse;font-size:12px}
-    .data-table th,.data-table td{border:1px solid #cbd5e1;padding:6px 8px;text-align:left;white-space:nowrap}
-    .data-table th{background:#f1f5f9;font-weight:700;position:sticky;top:0}
-    @media(max-width:700px){ .bottom-bar{flex-direction:column} .kpi-cards{width:100%} .action-btns{width:100%} }
-    @media(max-width:500px){ .navbar .nav-title{font-size:15px} .action-btns .btn{font-size:12px;padding:10px} }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: #f0fdf4; padding: 10px; font-size: 16px; color: #1e293b; }
+    
+    .container { max-width: 950px; margin: 0 auto; background: white; border-radius: 12px; padding: 0; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+    
+    .navbar { background: linear-gradient(135deg, #065f46 0%, #047857 30%, #059669 60%, #10b981 100%); padding: 16px 20px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; border-radius: 12px 12px 0 0; }
+    .navbar .nav-logo { background: rgba(255,255,255,0.2); width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3); }
+    .navbar .nav-title-group { flex: 1; min-width: 200px; }
+    .navbar .nav-title { font-size: 19px; font-weight: 800; color: white; line-height: 1.2; text-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+    .navbar .nav-subtitle { font-size: 13px; color: rgba(255,255,255,0.85); font-weight: 500; margin-top: 2px; }
+
+    .gauge-container { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.15); padding: 4px 12px; border-radius: 20px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
+    .gauge-wrapper { position: relative; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; }
+    .gauge-ring { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 50%; background: conic-gradient(#10b981 var(--comp,0%),rgba(255,255,255,0.2) 0); -webkit-mask: radial-gradient(closest-side,transparent 75%,black 76%); mask: radial-gradient(closest-side,transparent 75%,black 76%); }
+    .gauge-text { font-size: 10px; font-weight: 800; color: white; position: relative; z-index: 2; }
+    .gauge-label { font-size: 12px; font-weight: 700; color: white; }
+    
+    .content { padding: 15px; }
+    
+    .info-bar { display: flex; flex-wrap: wrap; justify-content: space-evenly; align-items: center; background: linear-gradient(to right, #059669, #10b981); color: white; padding: 6px 12px; border-radius: 10px; margin-bottom: 12px; font-size: 14px; font-weight: 600; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); gap: 10px; }
+    .info-bar div { display: flex; flex-direction: row; align-items: center; gap: 8px; white-space: nowrap; }
+    .info-bar span { background: rgba(255,255,255,0.25); color: white; padding: 4px 12px; border-radius: 6px; font-size: 14px; }
+    .reset-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.4); color: white; padding: 4px 12px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
+    .reset-btn:hover { background: rgba(255,255,255,0.25); }
+    
+    .facility-sticky { position: sticky; top: 0; z-index: 50; background: white; padding: 15px; margin: -15px -15px 15px -15px; border-bottom: 1px solid #cbd5e1; box-shadow: 0 4px 8px -2px rgba(0,0,0,0.08); }
+    .row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+    .col { flex: 1 1 150px; min-width: 120px; }
+    .col label { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; color: #475569; margin-bottom: 4px; }
+    .col select, .col input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 15px; background: white; }
+    .col input:disabled, .col select:disabled { background: #f1f5f9; }
+    .woreda-hint { font-size: 12px; margin-top: 3px; display: flex; align-items: center; gap: 4px; }
+    .woreda-valid { color: #10b981; }
+    .woreda-invalid { color: #ef4444; }
+
+    .facility-locked { background: #fef3c7; border: 1px solid #fcd34d; color: #92400e; padding: 10px 14px; border-radius: 8px; font-size: 14px; font-weight: 600; margin-bottom: 12px; display: none; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .facility-locked.show { display: flex; }
+    .facility-locked .edit-btn { padding: 6px 14px; font-size: 13px; background: #92400e; color: white; border-radius: 6px; cursor: pointer; font-weight: 700; border: none; margin-left: auto; }
+    
+    .toggle-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: #f8fafc; border-radius: 8px; margin-bottom: 12px; }
+    .toggle-row label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: 600; font-size: 14px; }
+    
+    .search-box { margin-bottom: 8px; position: relative; }
+    .search-box input { width: 100%; padding: 10px 10px 10px 34px; border: 1.5px solid #e2e8f0; border-radius: 20px; font-size: 14px; }
+    .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; min-height: 24px; }
+    .tag { display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 14px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid #e2e8f0; background: white; transition: 0.2s; }
+    .tag:hover { opacity: 0.8; }
+    .tag.sel { color: white; }
+    .tag.immediate { border-left: 4px solid #ea580c; }
+    .tag.weekly { border-left: 4px solid #0891b2; }
+    .tag.immediate.sel { background: #ea580c; border-color: #ea580c; }
+    .tag.weekly.sel { background: #0891b2; border-color: #0891b2; }
+    
+    .cards { margin: 12px 0; }
+    .card { background: white; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .card-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: linear-gradient(135deg, #065f46, #047857); color: white; cursor: pointer; font-weight: 700; font-size: 15px; }
+    .card-body { padding: 10px 16px; background: #f8fafc; }
+    .card-body.hide { display: none; }
+    
+    .f-row { display: flex; flex-wrap: wrap; gap: 6px; }
+    .f-col { flex: 1 1 55px; }
+    .f-col.wide { flex: 2 1 100px; }
+    .f-col label { font-size: 9px; font-weight: 800; text-transform: uppercase; color: #64748b; display: block; margin-bottom: 3px; }
+    .f-col input { width: 100%; padding: 8px 4px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 14px; text-align: center; }
+    .f-col input.input-error { border-color: #ef4444; background: #fef2f2; }
+    .f-col textarea { width: 100%; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 13px; resize: vertical; font-family: Arial, sans-serif; }
+    .f-col input[readonly] { background: #f1f5f9; font-weight: 700; }
+    
+    .error-msg { color: #ef4444; font-size: 11px; font-weight: 600; margin-top: 4px; display: none; }
+    .error-msg.show { display: block; }
+    .zero-error { color: #ef4444; font-size: 10px; font-weight: 700; margin-top: 2px; display: none; }
+    .zero-error.show { display: block; }
+    
+    .bottom-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 15px; }
+    .kpi-cards { display: flex; gap: 10px; flex: 1 1 auto; min-width: 200px; }
+    .kpi-card { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 12px 16px; border-radius: 12px; flex: 1; box-shadow: 0 2px 4px rgba(0,0,0,0.05); min-width: 90px; }
+    .kpi-card .kpi-label { font-size: 10px; font-weight: 800; text-transform: uppercase; text-align: center; }
+    .kpi-card .kpi-value { font-size: 20px; font-weight: 900; }
+    .kpi-comp { background: linear-gradient(135deg, #ecfdf5, #d1fae5); border: 1px solid #a7f3d0; color: #065f46; }
+    .kpi-time { background: linear-gradient(135deg, #eff6ff, #dbeafe); border: 1px solid #bfdbfe; color: #1e40af; }
+    
+    .action-btns { display: flex; flex-wrap: wrap; gap: 8px; flex: 2 1 auto; }
+    .btn { flex: 1 1 auto; padding: 12px 16px; border-radius: 24px; border: 1px solid #cbd5e1; background: white; font-weight: 700; font-size: 14px; cursor: pointer; text-align: center; transition: 0.2s; white-space: nowrap; }
+    .btn.p { background: #059669; color: white; border-color: #059669; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .msg { position: fixed; top: 25px; left: 50%; transform: translateX(-50%) translateY(-30px); z-index: 99999; padding: 12px 24px; border-radius: 50px; font-size: 15px; font-weight: 700; color: white; opacity: 0; visibility: hidden; transition: 0.5s; max-width: 90vw; }
+    .msg.show { transform: translateX(-50%) translateY(0); opacity: 1; visibility: visible; }
+    .msg.s { background: #059669; }
+    .msg.e { background: #dc2626; }
+
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center; padding: 15px; }
+    .modal-overlay.show { display: flex; }
+    .modal-content { background: white; padding: 20px; border-radius: 12px; max-width: 950px; width: 100%; max-height: 90vh; overflow: auto; }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .data-table th, .data-table td { border: 1px solid #cbd5e1; padding: 6px 8px; text-align: left; white-space: nowrap; }
+    .data-table th { background: #f1f5f9; font-weight: 700; position: sticky; top: 0; }
+    
+    @media(max-width: 700px) {
+      .bottom-bar { flex-direction: column; }
+      .kpi-cards { width: 100%; }
+      .action-btns { width: 100%; }
+    }
+    @media(max-width: 500px) {
+      .navbar .nav-title { font-size: 15px; }
+      .action-btns .btn { font-size: 12px; padding: 10px; }
+    }
   </style>
 </head>
 <body>
 <div class="container">
   <div class="navbar">
     <div class="nav-logo">
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+        <circle cx="9" cy="7" r="4"></circle>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+      </svg>
     </div>
     <div class="nav-title-group">
       <div class="nav-title">Community Based Event Surveillance (CBES) Notification Form</div>
       <div class="nav-subtitle">Powered by: Addis Ababa City Data Management Center</div>
     </div>
     <div class="gauge-container">
-      <div class="gauge-wrapper"><div class="gauge-ring" id="navGauge" style="--comp:0%;"></div><div class="gauge-text" id="navCompText">0%</div></div>
+      <div class="gauge-wrapper">
+        <div class="gauge-ring" id="navGauge" style="--comp:0%;"></div>
+        <div class="gauge-text" id="navCompText">0%</div>
+      </div>
       <span class="gauge-label">Completed</span>
     </div>
   </div>
@@ -111,10 +150,25 @@
 
     <div class="facility-sticky">
       <div class="row">
-        <div class="col"><label>Woreda ID</label><input type="text" id="woredaInput" placeholder="Type Woreda ID..." oninput="validateWoreda()" autocomplete="off"><div class="woreda-hint" id="woredaHint"></div></div>
-        <div class="col"><label>Sub City / Zone</label><input id="zf" disabled></div>
-        <div class="col"><label>Woreda</label><input id="wf" disabled></div>
-        <div class="col"><label>Health Center Name</label><select id="fs" disabled onchange="onFacilityChange()"><option value="">Select Facility</option></select></div>
+        <div class="col">
+          <label>Woreda ID</label>
+          <input type="text" id="woredaInput" placeholder="Type Woreda ID..." oninput="validateWoreda()" autocomplete="off">
+          <div class="woreda-hint" id="woredaHint"></div>
+        </div>
+        <div class="col">
+          <label>Sub City / Zone</label>
+          <input type="text" id="zf" disabled>
+        </div>
+        <div class="col">
+          <label>Woreda</label>
+          <input type="text" id="wf" disabled>
+        </div>
+        <div class="col">
+          <label>Health Center Name</label>
+          <select id="fs" disabled onchange="onFacilityChange()">
+            <option value="">Select Facility</option>
+          </select>
+        </div>
       </div>
     </div>
 
@@ -130,19 +184,88 @@
     </div>
 
     <div id="ds">
-      <div style="font-weight:700;margin-bottom:8px">Select Diseases to Report</div>
-      <div class="search-box"><span class="search-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span><input type="text" id="sq" placeholder="Search diseases..." oninput="fil()"></div>
+      <div style="font-weight:700; margin-bottom:8px;">Select Diseases to Report</div>
+      
+      <!-- SEARCH INPUT ELEMENT -->
+      <div class="search-box">
+        <span class="search-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </span>
+        <input type="text" id="sq" placeholder="Search diseases..." oninput="fil()">
+      </div>
+      
       <div class="tags" id="st"></div>
       <div class="tags" id="at"></div>
+      
+      <!-- INDIVIDUAL DISEASE CARDS -->
       <div class="cards" id="dc"></div>
-      <div class="cards" id="rumorSection" style="display:none;"><div class="card" style="border-color:#93c5fd"><div class="card-header" style="background:#3b82f6" onclick="this.nextElementSibling.classList.toggle('hide')"><span>📢 Community Rumors & Events</span></div><div class="card-body"><div class="f-row"><div class="f-col wide"><label>Notifs received from 6406</label><input type="number" id="rumor_rcv" value="0"></div><div class="f-col wide"><label>Rumors investigated from 6406</label><input type="number" id="rumor_inv" value="0"></div></div><div style="margin-top:8px"><label style="font-size:10px;font-weight:800;color:#64748b">Unusual health events (2+ severe illnesses or deaths in a week)</label><textarea id="unusual_ev" rows="2" placeholder="Describe any unusual health events observed..."></textarea></div></div></div></div>
-      <div class="cards" id="totalsSection" style="display:none;"><div class="card" style="border-color:#5eead4"><div class="card-header" style="background:#0f766e" onclick="this.nextElementSibling.classList.toggle('hide')"><span>📊 Overall Summary (Auto-calculated)</span></div><div class="card-body"><div class="f-row"><div class="f-col wide"><label>Total notifications from community</label><input type="number" id="tot_comm" value="0" readonly></div><div class="f-col wide"><label>Total fulfilling case definition</label><input type="number" id="tot_def" value="0" readonly></div><div class="f-col wide"><label>Total done within 30 minutes</label><input type="number" id="tot_30m" value="0" readonly></div></div></div></div></div>
+      
+      <!-- RUMOR SECTION -->
+      <div class="cards" id="rumorSection" style="display:none;">
+        <div class="card" style="border-color:#93c5fd">
+          <div class="card-header" style="background:#3b82f6" onclick="this.nextElementSibling.classList.toggle('hide')">
+            <span>📢 Community Rumors & Events</span>
+          </div>
+          <div class="card-body">
+            <div class="f-row">
+              <div class="f-col wide">
+                <label>Notifs received from 6406</label>
+                <input type="number" id="rumor_rcv" value="0">
+              </div>
+              <div class="f-col wide">
+                <label>Rumors investigated from 6406</label>
+                <input type="number" id="rumor_inv" value="0">
+              </div>
+            </div>
+            <div style="margin-top:8px">
+              <label style="font-size:10px; font-weight:800; color:#64748b">
+                Unusual health events (2+ severe illnesses or deaths in a week)
+              </label>
+              <textarea id="unusual_ev" rows="2" placeholder="Describe any unusual health events observed..."></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- TOTALS SECTION -->
+      <div class="cards" id="totalsSection" style="display:none;">
+        <div class="card" style="border-color:#5eead4">
+          <div class="card-header" style="background:#0f766e" onclick="this.nextElementSibling.classList.toggle('hide')">
+            <span>📊 Overall Summary (Auto-calculated)</span>
+          </div>
+          <div class="card-body">
+            <div class="f-row">
+              <div class="f-col wide">
+                <label>Total notifications from community</label>
+                <input type="number" id="tot_comm" value="0" readonly>
+              </div>
+              <div class="f-col wide">
+                <label>Total fulfilling case definition</label>
+                <input type="number" id="tot_def" value="0" readonly>
+              </div>
+              <div class="f-col wide">
+                <label>Total done within 30 minutes</label>
+                <input type="number" id="tot_30m" value="0" readonly>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="bottom-bar">
       <div class="kpi-cards">
-        <div class="kpi-card kpi-comp"><span class="kpi-label">Completeness</span><span class="kpi-value" id="agg_comp">0%</span></div>
-        <div class="kpi-card kpi-time"><span class="kpi-label">Timeliness</span><span class="kpi-value" id="agg_time">0%</span></div>
+        <div class="kpi-card kpi-comp">
+          <span class="kpi-label">Completeness</span>
+          <span class="kpi-value" id="agg_comp">0%</span>
+        </div>
+        <div class="kpi-card kpi-time">
+          <span class="kpi-label">Timeliness</span>
+          <span class="kpi-value" id="agg_time">0%</span>
+        </div>
       </div>
       <div class="action-btns">
         <button class="btn" onclick="viewData()">📋 View Data</button>
@@ -154,10 +277,27 @@
 </div>
 
 <div class="msg" id="msg"></div>
-<div class="modal-overlay" id="viewModal"><div class="modal-content"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><strong id="viewTitle">Data</strong><button class="btn" style="padding:6px 16px;font-size:13px" onclick="document.getElementById('viewModal').classList.remove('show')">Close</button></div><div style="overflow:auto;max-height:70vh"><table class="data-table"><thead id="viewHead"></thead><tbody id="viewBody"></tbody></table></div></div></div>
+
+<!-- MODAL SECTION -->
+<div class="modal-overlay" id="viewModal">
+  <div class="modal-content">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <strong id="viewTitle">Data</strong>
+      <button class="btn" style="padding:6px 16px; font-size:13px;" onclick="document.getElementById('viewModal').classList.remove('show')">Close</button>
+    </div>
+    <div style="overflow:auto; max-height:70vh;">
+      <table class="data-table">
+        <thead id="viewHead"></thead>
+        <tbody id="viewBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
 
 <script>
-// IMPORTANT: Ensure this matches your newly deployed Web App URL
+// =========================================================
+// API CONNECTION SETUP (GITHUB TO GOOGLE SHEET)
+// =========================================================
 const SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwEWlUDyUQmQUT-5kDfgHnK3yy5_MAhuaz1IxZe7OoFR0iFYoTkBVsN9gBDN7hZbCYQ/exec";
 
 const DISEASES = [
@@ -188,312 +328,615 @@ const DISEASES = [
   { n: "Obstetric Fistula", k: "fistula", t30: true, r: "immediate" }
 ];
 
-let sel={},facList=[],currentZone='',currentWoreda='',epiY,epiM,epiW,currentWoredaId='',isEditMode=false,lastSubmittedFacility='',isAlreadySubmitted=false;
-const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+let sel = {};
+let facList = [];
+let currentZone = '';
+let currentWoreda = '';
+let epiY, epiM, epiW;
+let currentWoredaId = '';
+let isEditMode = false;
+let lastSubmittedFacility = '';
+let isAlreadySubmitted = false;
 
-function init(){
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+function init() {
   try {
-    let t=new Date(),wd=(t.getDay()+6)%7+1,th=new Date(t);th.setDate(t.getDate()-wd-3);
-    epiY=th.getFullYear();epiM=MONTHS[th.getMonth()];let j1=new Date(epiY,0,1);
-    epiW=Math.floor((Math.floor((th-j1)/86400000)+10)/7);if(epiW<1)epiW=1;if(epiW>52)epiW=52;
-    document.getElementById('lbl_y').textContent=epiY;document.getElementById('lbl_m').textContent=epiM;document.getElementById('lbl_w').textContent=epiW;
-    renderTags();loadFacilities();loadMetrics();
-  } catch(e) {
-    msg('Initialization error. Check console.','e');
+    let t = new Date();
+    let wd = (t.getDay() + 6) % 7 + 1;
+    let th = new Date(t);
+    th.setDate(t.getDate() - wd - 3);
+    
+    epiY = th.getFullYear();
+    epiM = MONTHS[th.getMonth()];
+    
+    let j1 = new Date(epiY, 0, 1);
+    epiW = Math.floor((Math.floor((th - j1) / 86400000) + 10) / 7);
+    if (epiW < 1) epiW = 1;
+    if (epiW > 52) epiW = 52;
+    
+    document.getElementById('lbl_y').textContent = epiY;
+    document.getElementById('lbl_m').textContent = epiM;
+    document.getElementById('lbl_w').textContent = epiW;
+    
+    renderTags();
+    loadFacilities();
+    loadMetrics();
+  } catch (e) {
+    msg('Initialization error. Check console.', 'e');
     console.error(e);
   }
 }
 
-function parseCSV(s){let r=[],row=[],f='',q=false;for(let i=0;i<s.length;i++){let c=s[i],n=s[i+1];if(q){if(c==='"'){if(n==='"'){f+='"';i++;}else q=false;}else f+=c;}else{if(c==='"')q=true;else if(c===','){row.push(f.trim());f='';}else if(c==='\n'||c==='\r'){if(c==='\r'&&n==='\n')i++;row.push(f.trim());if(row.some(x=>x!==''))r.push(row);row=[];f='';}else f+=c;}}if(f||row.length){row.push(f.trim());r.push(row);}return r;}
+function parseCSV(s) {
+  let r = [];
+  let row = [];
+  let f = '';
+  let q = false;
+  for (let i = 0; i < s.length; i++) {
+    let c = s[i];
+    let n = s[i + 1];
+    if (q) {
+      if (c === '"') {
+        if (n === '"') {
+          f += '"';
+          i++;
+        } else {
+          q = false;
+        }
+      } else {
+        f += c;
+      }
+    } else {
+      if (c === '"') {
+        q = true;
+      } else if (c === ',') {
+        row.push(f.trim());
+        f = '';
+      } else if (c === '\n' || c === '\r') {
+        if (c === '\r' && n === '\n') i++;
+        row.push(f.trim());
+        if (row.some(x => x !== '')) r.push(row);
+        row = [];
+        f = '';
+      } else {
+        f += c;
+      }
+    }
+  }
+  if (f || row.length) {
+    row.push(f.trim());
+    r.push(row);
+  }
+  return r;
+}
 
-function loadFacilities(){
+function loadFacilities() {
   fetch('https://docs.google.com/spreadsheets/d/1H35dwM2pQO6pdycz-HcOKXiVlL10GXZX9Vvme4CLzQE/gviz/tq?tqx=out:csv&sheet=MFR%20Facility%20List')
-  .then(r=>r.text()).then(csv=>{
-    let rows=parseCSV(csv),hdr=rows[0],cid=hdr.indexOf('Woreda ID'),cz=hdr.indexOf('Zone'),cw=hdr.indexOf('Woreda'),cf=hdr.indexOf('Health_Facility'),ct=hdr.indexOf('Facility Type'),co=hdr.indexOf('Ownership'),cs=hdr.indexOf('Operational Status');
-    facList=[];for(let i=1;i<rows.length;i++){let c=rows[i];if(c.length<4)continue;let ty=(c[ct]||'').toLowerCase(),ow=(c[co]||'').toLowerCase(),st=(c[cs]||'').toLowerCase();if(st.includes('operational')&&ty.includes('health center')&&(ow.includes('public')||ow.includes('gov')))facList.push({id:c[cid],zone:c[cz],woreda:c[cw],fac:c[cf]});}
-  }).catch(()=>msg('Could not load facilities list. Are permissions public?','e'));
+    .then(r => r.text())
+    .then(csv => {
+      let rows = parseCSV(csv);
+      let hdr = rows[0];
+      let cid = hdr.indexOf('Woreda ID');
+      let cz = hdr.indexOf('Zone');
+      let cw = hdr.indexOf('Woreda');
+      let cf = hdr.indexOf('Health_Facility');
+      let ct = hdr.indexOf('Facility Type');
+      let co = hdr.indexOf('Ownership');
+      let cs = hdr.indexOf('Operational Status');
+      
+      facList = [];
+      for (let i = 1; i < rows.length; i++) {
+        let c = rows[i];
+        if (c.length < 4) continue;
+        let ty = (c[ct] || '').toLowerCase();
+        let ow = (c[co] || '').toLowerCase();
+        let st = (c[cs] || '').toLowerCase();
+        if (st.includes('operational') && ty.includes('health center') && (ow.includes('public') || ow.includes('gov'))) {
+          facList.push({ id: c[cid], zone: c[cz], woreda: c[cw], fac: c[cf] });
+        }
+      }
+    })
+    .catch(() => msg('Could not load facilities list. Are permissions public?', 'e'));
 }
 
-function loadMetrics(){
-  fetch(SCRIPT_API_URL+'?action=getMetrics&week='+epiW+'&year='+epiY)
-  .then(r=>r.json()).then(data=>{
-    if(data.status==='success'){
-      let comp=data.completeness||0,time=data.timeliness||0;
-      document.getElementById('agg_comp').textContent=comp+'%';
-      document.getElementById('agg_time').textContent=time+'%';
-      document.getElementById('navGauge').style.setProperty('--comp',comp+'%');
-      document.getElementById('navCompText').textContent=comp+'%';
-    }
-  }).catch((err)=>{
-     console.error("Metric fetch failed, likely CORS or Auth issue.", err);
-  });
+function loadMetrics() {
+  fetch(SCRIPT_API_URL + '?action=getMetrics&week=' + epiW + '&year=' + epiY)
+    .then(r => r.json())
+    .then(data => {
+      if (data.status === 'success') {
+        let comp = data.completeness || 0;
+        let time = data.timeliness || 0;
+        document.getElementById('agg_comp').textContent = comp + '%';
+        document.getElementById('agg_time').textContent = time + '%';
+        document.getElementById('navGauge').style.setProperty('--comp', comp + '%');
+        document.getElementById('navCompText').textContent = comp + '%';
+      }
+    })
+    .catch(err => {
+      console.error("Metric fetch failed, likely CORS or Auth issue.", err);
+    });
 }
 
-function renderTags(){document.getElementById('at').innerHTML=DISEASES.map(d=>{let s=sel[d.k]!==undefined;return'<span class="tag '+d.r+(s?' sel':'')+'" onclick="togD(\''+d.k+'\')">'+d.n+'</span>';}).join('');}
-function togD(k){if(sel[k]!==undefined)delete sel[k];else sel[k]={};renderTags();renderST();renderCards();calculateAndValidate();updateSections();}
-function renderST(){let k=Object.keys(sel);document.getElementById('st').innerHTML=k.length?k.map(x=>{let d=DISEASES.find(y=>y.k===x);return'<span class="tag '+d.r+' sel" onclick="togD(\''+x+'\')">'+d.n+' ✕</span>';}).join(''):'<span style="color:#94a3b8;font-size:13px">No diseases selected — click tags above</span>';}
-function fil(){let q=document.getElementById('sq').value.toLowerCase();document.getElementById('at').innerHTML=DISEASES.filter(d=>d.n.toLowerCase().includes(q)).map(d=>{let s=sel[d.k]!==undefined;return'<span class="tag '+d.r+(s?' sel':'')+'" onclick="togD(\''+d.k+'\')">'+d.n+'</span>';}).join('');}
-function renderCards(){let k=Object.keys(sel),c=document.getElementById('dc');if(!k.length){c.innerHTML='';return;}c.innerHTML=k.map(x=>{let d=DISEASES.find(y=>y.k===x);let t30=d.t30?'<div class="f-col"><label>Done within 30 min</label><input type="number" id="'+d.k+'_30m" value="0" oninput="calculateAndValidate()"></div>':'<input type="hidden" id="'+d.k+'_30m" value="0">';return'<div class="card"><div class="card-header" onclick="this.nextElementSibling.classList.toggle(\'hide\')"><span>'+d.n+'</span></div><div class="card-body"><div class="f-row"><div class="f-col wide"><label>Notifications from community</label><input type="number" id="'+d.k+'_comm" value="0" oninput="calculateAndValidate()"></div><div class="f-col wide"><label>Fulfilling case definition</label><input type="number" id="'+d.k+'_def" value="0" oninput="calculateAndValidate()"></div>'+t30+'</div><div class="error-msg" id="'+d.k+'_err">Error: Community ≥ Case Def'+ (d.t30?' ≥ 30 Min':'') +'</div><div class="zero-error" id="'+d.k+'_zero">⚠️ Please enter a number greater than 0</div></div></div>';}).join('');}
-function updateSections(){let k=Object.keys(sel);document.getElementById('rumorSection').style.display=k.length?'block':'none';document.getElementById('totalsSection').style.display=k.length?'block':'none';}
-
-function validateWoreda(){
-  let id=document.getElementById('woredaInput').value.trim(),hint=document.getElementById('woredaHint');
-  document.getElementById('fs').innerHTML='<option value="">Select Facility</option>';document.getElementById('fs').disabled=true;
-  document.getElementById('zf').value='';document.getElementById('wf').value='';calculateAndValidate();
-  document.getElementById('facilityLockedMsg').classList.remove('show');isEditMode=false;isAlreadySubmitted=false;
-  sel={};renderTags();renderST();renderCards();updateSections();
-  if(!id){hint.innerHTML='';return;}
-  let facs=facList.filter(f=>f.id===id);
-  if(facs.length){
-    hint.innerHTML='✔ Valid Woreda';hint.className='woreda-hint woreda-valid';currentZone=facs[0].zone;currentWoreda=facs[0].woreda;currentWoredaId=id;
-    document.getElementById('zf').value=currentZone;document.getElementById('wf').value=currentWoreda;
-    facs.forEach(f=>{let o=document.createElement('option');o.value=f.fac;o.textContent=f.fac;document.getElementById('fs').appendChild(o);});
-    document.getElementById('fs').disabled=false;
-    if(facs.length===1){document.getElementById('fs').value=facs[0].fac;onFacilityChange();}
-  }else{hint.innerHTML='✖ Not found';hint.className='woreda-hint woreda-invalid';}
+function renderTags() {
+  document.getElementById('at').innerHTML = DISEASES.map(d => {
+    let s = sel[d.k] !== undefined;
+    return '<span class="tag ' + d.r + (s ? ' sel' : '') + '" onclick="togD(\'' + d.k + '\')">' + d.n + '</span>';
+  }).join('');
 }
 
-function onFacilityChange(){
-  let fname=document.getElementById('fs').value;
-  document.getElementById('facilityLockedMsg').classList.remove('show');
-  isEditMode=false;isAlreadySubmitted=false;
-  sel={};renderTags();renderST();renderCards();updateSections();calculateAndValidate();
-  document.getElementById('submitBtn').disabled=false;document.getElementById('submitBtn').textContent='Submit Report';
-  document.getElementById('editBtn').disabled=true;
-  if(!fname)return;
+function togD(k) {
+  if (sel[k] !== undefined) {
+    delete sel[k];
+  } else {
+    sel[k] = {};
+  }
+  renderTags();
+  renderST();
+  renderCards();
+  calculateAndValidate();
+  updateSections();
+}
+
+function renderST() {
+  let k = Object.keys(sel);
+  if (k.length) {
+    document.getElementById('st').innerHTML = k.map(x => {
+      let d = DISEASES.find(y => y.k === x);
+      return '<span class="tag ' + d.r + ' sel" onclick="togD(\'' + x + '\')">' + d.n + ' ✕</span>';
+    }).join('');
+  } else {
+    document.getElementById('st').innerHTML = '<span style="color:#94a3b8; font-size:13px;">No diseases selected — click tags above</span>';
+  }
+}
+
+function fil() {
+  let q = document.getElementById('sq').value.toLowerCase();
+  document.getElementById('at').innerHTML = DISEASES.filter(d => d.n.toLowerCase().includes(q)).map(d => {
+    let s = sel[d.k] !== undefined;
+    return '<span class="tag ' + d.r + (s ? ' sel' : '') + '" onclick="togD(\'' + d.k + '\')">' + d.n + '</span>';
+  }).join('');
+}
+
+function renderCards() {
+  let k = Object.keys(sel);
+  let c = document.getElementById('dc');
+  if (!k.length) {
+    c.innerHTML = '';
+    return;
+  }
+  c.innerHTML = k.map(x => {
+    let d = DISEASES.find(y => y.k === x);
+    let t30 = d.t30 
+      ? '<div class="f-col"><label>Done within 30 min</label><input type="number" id="' + d.k + '_30m" value="0" oninput="calculateAndValidate()"></div>' 
+      : '<input type="hidden" id="' + d.k + '_30m" value="0">';
+      
+    return '<div class="card">' +
+             '<div class="card-header" onclick="this.nextElementSibling.classList.toggle(\'hide\')">' +
+               '<span>' + d.n + '</span>' +
+             '</div>' +
+             '<div class="card-body">' +
+               '<div class="f-row">' +
+                 '<div class="f-col wide">' +
+                   '<label>Notifications from community</label>' +
+                   '<input type="number" id="' + d.k + '_comm" value="0" oninput="calculateAndValidate()">' +
+                 '</div>' +
+                 '<div class="f-col wide">' +
+                   '<label>Fulfilling case definition</label>' +
+                   '<input type="number" id="' + d.k + '_def" value="0" oninput="calculateAndValidate()">' +
+                 '</div>' + 
+                 t30 +
+               '</div>' +
+               '<div class="error-msg" id="' + d.k + '_err">Error: Community ≥ Case Def' + (d.t30 ? ' ≥ 30 Min' : '') + '</div>' +
+               '<div class="zero-error" id="' + d.k + '_zero">⚠️ Please enter a number greater than 0</div>' +
+             '</div>' +
+           '</div>';
+  }).join('');
+}
+
+function updateSections() {
+  let k = Object.keys(sel);
+  document.getElementById('rumorSection').style.display = k.length ? 'block' : 'none';
+  document.getElementById('totalsSection').style.display = k.length ? 'block' : 'none';
+}
+
+function validateWoreda() {
+  let id = document.getElementById('woredaInput').value.trim();
+  let hint = document.getElementById('woredaHint');
   
-  fetch(SCRIPT_API_URL+'?action=checkDuplicate&zone='+encodeURIComponent(currentZone)+'&woreda='+encodeURIComponent(currentWoreda)+'&facility='+encodeURIComponent(fname)+'&week='+epiW+'&year='+epiY)
-  .then(r=>r.json()).then(res=>{
-    if(res.exists){
-      isAlreadySubmitted=true;lastSubmittedFacility=fname;
-      document.getElementById('lockedFacilityName').textContent=fname;
-      document.getElementById('facilityLockedMsg').classList.add('show');
-      document.getElementById('submitBtn').disabled=true;
-      document.getElementById('editBtn').disabled=false;
-      loadExistingRecord(fname);
-    }else{
-      isAlreadySubmitted=false;lastSubmittedFacility=fname;
-      document.getElementById('editBtn').disabled=true;
+  document.getElementById('fs').innerHTML = '<option value="">Select Facility</option>';
+  document.getElementById('fs').disabled = true;
+  document.getElementById('zf').value = '';
+  document.getElementById('wf').value = '';
+  
+  calculateAndValidate();
+  document.getElementById('facilityLockedMsg').classList.remove('show');
+  
+  isEditMode = false;
+  isAlreadySubmitted = false;
+  sel = {};
+  
+  renderTags();
+  renderST();
+  renderCards();
+  updateSections();
+  
+  if (!id) {
+    hint.innerHTML = '';
+    return;
+  }
+  
+  let facs = facList.filter(f => f.id === id);
+  if (facs.length) {
+    hint.innerHTML = '✔ Valid Woreda';
+    hint.className = 'woreda-hint woreda-valid';
+    currentZone = facs[0].zone;
+    currentWoreda = facs[0].woreda;
+    currentWoredaId = id;
+    
+    document.getElementById('zf').value = currentZone;
+    document.getElementById('wf').value = currentWoreda;
+    
+    facs.forEach(f => {
+      let o = document.createElement('option');
+      o.value = f.fac;
+      o.textContent = f.fac;
+      document.getElementById('fs').appendChild(o);
+    });
+    
+    document.getElementById('fs').disabled = false;
+    if (facs.length === 1) {
+      document.getElementById('fs').value = facs[0].fac;
+      onFacilityChange();
     }
-  }).catch((err)=>{
-      console.error("Duplicate check failed", err);
-  });
+  } else {
+    hint.innerHTML = '✖ Not found';
+    hint.className = 'woreda-hint woreda-invalid';
+  }
 }
 
-function loadExistingRecord(fname){
-  fetch(SCRIPT_API_URL+'?action=getRecord&zone='+encodeURIComponent(currentZone)+'&woreda='+encodeURIComponent(currentWoreda)+'&facility='+encodeURIComponent(fname)+'&week='+epiW+'&year='+epiY)
-  .then(r=>r.json()).then(res=>{
-    if(res.status==='success' && res.record){
-      let r=res.record,headers=res.headers;
-      sel={};
-      DISEASES.forEach(d=>{
-        let commCol=hdrIndex(headers,'Tot_no_'+d.k+'_notif');
-        let defCol=hdrIndex(headers,'Tot_no_'+d.k+'_fulf');
-        if(commCol!==-1 && (parseInt(r[commCol])>0 || parseInt(r[defCol])>0)) sel[d.k]={};
-      });
-      renderTags();renderST();renderCards();updateSections();
-      setTimeout(()=>{
-        DISEASES.forEach(d=>{
-          if(sel[d.k]!==undefined){
-            let commCol=hdrIndex(headers,'Tot_no_'+d.k+'_notif');
-            let defCol=hdrIndex(headers,'Tot_no_'+d.k+'_fulf');
-            let t30Col=hdrIndex(headers,'Tot_no_'+d.k+'_30min');
-            if(commCol!==-1) document.getElementById(d.k+'_comm').value=r[commCol]||0;
-            if(defCol!==-1) document.getElementById(d.k+'_def').value=r[defCol]||0;
-            if(t30Col!==-1 && d.t30) document.getElementById(d.k+'_30m').value=r[t30Col]||0;
+function onFacilityChange() {
+  let fname = document.getElementById('fs').value;
+  document.getElementById('facilityLockedMsg').classList.remove('show');
+  isEditMode = false;
+  isAlreadySubmitted = false;
+  sel = {};
+  
+  renderTags();
+  renderST();
+  renderCards();
+  updateSections();
+  calculateAndValidate();
+  
+  document.getElementById('submitBtn').disabled = false;
+  document.getElementById('submitBtn').textContent = 'Submit Report';
+  document.getElementById('editBtn').disabled = true;
+  
+  if (!fname) return;
+  
+  fetch(SCRIPT_API_URL + '?action=checkDuplicate&zone=' + encodeURIComponent(currentZone) + '&woreda=' + encodeURIComponent(currentWoreda) + '&facility=' + encodeURIComponent(fname) + '&week=' + epiW + '&year=' + epiY)
+    .then(r => r.json())
+    .then(res => {
+      if (res.exists) {
+        isAlreadySubmitted = true;
+        lastSubmittedFacility = fname;
+        document.getElementById('lockedFacilityName').textContent = fname;
+        document.getElementById('facilityLockedMsg').classList.add('show');
+        document.getElementById('submitBtn').disabled = true;
+        document.getElementById('editBtn').disabled = false;
+        loadExistingRecord(fname);
+      } else {
+        isAlreadySubmitted = false;
+        lastSubmittedFacility = fname;
+        document.getElementById('editBtn').disabled = true;
+      }
+    })
+    .catch(err => {
+      console.error("Duplicate check failed", err);
+    });
+}
+
+function loadExistingRecord(fname) {
+  fetch(SCRIPT_API_URL + '?action=getRecord&zone=' + encodeURIComponent(currentZone) + '&woreda=' + encodeURIComponent(currentWoreda) + '&facility=' + encodeURIComponent(fname) + '&week=' + epiW + '&year=' + epiY)
+    .then(r => r.json())
+    .then(res => {
+      if (res.status === 'success' && res.record) {
+        let r = res.record;
+        let headers = res.headers;
+        sel = {};
+        
+        DISEASES.forEach(d => {
+          let commCol = hdrIndex(headers, 'Tot_no_' + d.k + '_notif');
+          let defCol = hdrIndex(headers, 'Tot_no_' + d.k + '_fulf');
+          if (commCol !== -1 && (parseInt(r[commCol]) > 0 || parseInt(r[defCol]) > 0)) {
+            sel[d.k] = {};
           }
         });
-        let rcvCol=hdrIndex(headers,'Notif_recveived_6406');
-        let invCol=hdrIndex(headers,'Notif_investig_6406');
-        let unuCol=hdrIndex(headers,'Unusual_health_event');
-        if(rcvCol!==-1) document.getElementById('rumor_rcv').value=r[rcvCol]||0;
-        if(invCol!==-1) document.getElementById('rumor_inv').value=r[invCol]||0;
-        if(unuCol!==-1) document.getElementById('unusual_ev').value=r[unuCol]||'';
-        calculateAndValidate();
-      },200);
-    }
-  });
+        
+        renderTags();
+        renderST();
+        renderCards();
+        updateSections();
+        
+        setTimeout(() => {
+          DISEASES.forEach(d => {
+            if (sel[d.k] !== undefined) {
+              let commCol = hdrIndex(headers, 'Tot_no_' + d.k + '_notif');
+              let defCol = hdrIndex(headers, 'Tot_no_' + d.k + '_fulf');
+              let t30Col = hdrIndex(headers, 'Tot_no_' + d.k + '_30min');
+              
+              if (commCol !== -1) document.getElementById(d.k + '_comm').value = r[commCol] || 0;
+              if (defCol !== -1) document.getElementById(d.k + '_def').value = r[defCol] || 0;
+              if (t30Col !== -1 && d.t30) document.getElementById(d.k + '_30m').value = r[t30Col] || 0;
+            }
+          });
+          
+          let rcvCol = hdrIndex(headers, 'Notif_recveived_6406');
+          let invCol = hdrIndex(headers, 'Notif_investig_6406');
+          let unuCol = hdrIndex(headers, 'Unusual_health_event');
+          
+          if (rcvCol !== -1) document.getElementById('rumor_rcv').value = r[rcvCol] || 0;
+          if (invCol !== -1) document.getElementById('rumor_inv').value = r[invCol] || 0;
+          if (unuCol !== -1) document.getElementById('unusual_ev').value = r[unuCol] || '';
+          
+          calculateAndValidate();
+        }, 200);
+      }
+    });
 }
 
-function hdrIndex(headers,search){
-  if(!headers) return -1;
-  let s=search.toLowerCase().replace(/_/g,'');
-  for(let i=0;i<headers.length;i++){
-    if(headers[i] && headers[i].toLowerCase().replace(/_/g,'')===s) return i;
+function hdrIndex(headers, search) {
+  if (!headers) return -1;
+  let s = search.toLowerCase().replace(/_/g, '');
+  for (let i = 0; i < headers.length; i++) {
+    if (headers[i] && headers[i].toLowerCase().replace(/_/g, '') === s) return i;
   }
   return -1;
 }
 
-function editRecord(){
-  isEditMode=true;isAlreadySubmitted=false;
+function editRecord() {
+  isEditMode = true;
+  isAlreadySubmitted = false;
   document.getElementById('facilityLockedMsg').classList.remove('show');
-  document.querySelector('input[name="ct"][value="cases"]').checked=true;
+  document.querySelector('input[name="ct"][value="cases"]').checked = true;
   tog();
-  document.getElementById('submitBtn').disabled=false;
-  document.getElementById('submitBtn').textContent='Update Report';
-  document.getElementById('editBtn').disabled=true;
-  if(lastSubmittedFacility) loadExistingRecord(lastSubmittedFacility);
+  document.getElementById('submitBtn').disabled = false;
+  document.getElementById('submitBtn').textContent = 'Update Report';
+  document.getElementById('editBtn').disabled = true;
+  if (lastSubmittedFacility) loadExistingRecord(lastSubmittedFacility);
 }
 
-function calculateAndValidate(){
-  let tc=0,td=0,tt=0,allValid=true,hasNonZero=false;
-  let fs=document.getElementById('fs').value!=='',btn=document.getElementById('submitBtn');
+function calculateAndValidate() {
+  let tc = 0;
+  let td = 0;
+  let tt = 0;
+  let allValid = true;
+  let hasNonZero = false;
+  let fs = document.getElementById('fs').value !== '';
+  let btn = document.getElementById('submitBtn');
   
-  if(!fs){btn.textContent='Select Facility to Submit';btn.disabled=true;return;}
-  if(!isEditMode){btn.textContent='Submit Report';btn.disabled=true;}
-  
-  DISEASES.forEach(d=>{
-    if(sel[d.k]===undefined)return;
-    let comm=parseInt(document.getElementById(d.k+'_comm')?.value)||0;
-    let def=parseInt(document.getElementById(d.k+'_def')?.value)||0;
-    let t30=parseInt(document.getElementById(d.k+'_30m')?.value)||0;
-    let errEl=document.getElementById(d.k+'_err');
-    let zeroEl=document.getElementById(d.k+'_zero');
-    let isValid=true;
-    
-    if(comm===0 && def===0 && (!d.t30 || t30===0)){
-      isValid=false;
-      if(zeroEl) zeroEl.classList.add('show');
-    }else{
-      hasNonZero=true;
-      if(zeroEl) zeroEl.classList.remove('show');
-    }
-    
-    if(comm<def){isValid=false;if(errEl)errEl.classList.add('show');}else{if(errEl)errEl.classList.remove('show');}
-    if(d.t30&&def<t30){isValid=false;if(errEl)errEl.classList.add('show');}else{if(errEl&&comm>=def)errEl.classList.remove('show');}
-    
-    if(!isValid) allValid=false;
-    tc+=comm;td+=def;tt+=t30;
-  });
-
-  document.getElementById('tot_comm').value=tc;
-  document.getElementById('tot_def').value=td;
-  document.getElementById('tot_30m').value=tt;
-  
-  let keysCount=Object.keys(sel).length;
-  btn.disabled=!(allValid && hasNonZero && keysCount>0);
-}
-
-function tog(){document.getElementById('ds').style.display=document.querySelector('input[name="ct"]:checked').value==='nocases'?'none':'block';}
-
-function sub(){
-  let f=document.getElementById('fs').value;
-  if(!f)return msg('Select a facility','e');
-  
-  if(!isEditMode && isAlreadySubmitted){
-    return msg('❌ This facility has already submitted for this week. Use Edit Record instead.','e');
+  if (!fs) {
+    btn.textContent = 'Select Facility to Submit';
+    btn.disabled = true;
+    return;
+  }
+  if (!isEditMode) {
+    btn.textContent = 'Submit Report';
+    btn.disabled = true;
   }
   
-  let no=document.querySelector('input[name="ct"]:checked').value==='nocases';
+  DISEASES.forEach(d => {
+    if (sel[d.k] === undefined) return;
+    
+    let commEl = document.getElementById(d.k + '_comm');
+    let defEl = document.getElementById(d.k + '_def');
+    let t30El = document.getElementById(d.k + '_30m');
+    
+    let comm = parseInt(commEl?.value) || 0;
+    let def = parseInt(defEl?.value) || 0;
+    let t30 = parseInt(t30El?.value) || 0;
+    
+    let errEl = document.getElementById(d.k + '_err');
+    let zeroEl = document.getElementById(d.k + '_zero');
+    let isValid = true;
+    
+    if (comm === 0 && def === 0 && (!d.t30 || t30 === 0)) {
+      isValid = false;
+      if (zeroEl) zeroEl.classList.add('show');
+    } else {
+      hasNonZero = true;
+      if (zeroEl) zeroEl.classList.remove('show');
+    }
+    
+    if (comm < def) {
+      isValid = false;
+      if (errEl) errEl.classList.add('show');
+    } else {
+      if (errEl) errEl.classList.remove('show');
+    }
+    
+    if (d.t30 && def < t30) {
+      isValid = false;
+      if (errEl) errEl.classList.add('show');
+    } else {
+      if (errEl && comm >= def) errEl.classList.remove('show');
+    }
+    
+    if (!isValid) allValid = false;
+    tc += comm;
+    td += def;
+    tt += t30;
+  });
+
+  document.getElementById('tot_comm').value = tc;
+  document.getElementById('tot_def').value = td;
+  document.getElementById('tot_30m').value = tt;
   
-  if(!no){
-    let zeroFields=[];
-    DISEASES.forEach(d=>{
-      if(sel[d.k]===undefined)return;
-      let comm=parseInt(document.getElementById(d.k+'_comm')?.value)||0;
-      let def=parseInt(document.getElementById(d.k+'_def')?.value)||0;
-      if(comm===0 && def===0){
+  let keysCount = Object.keys(sel).length;
+  btn.disabled = !(allValid && hasNonZero && keysCount > 0);
+}
+
+function tog() {
+  let isNoCases = document.querySelector('input[name="ct"]:checked').value === 'nocases';
+  document.getElementById('ds').style.display = isNoCases ? 'none' : 'block';
+}
+
+function sub() {
+  let f = document.getElementById('fs').value;
+  if (!f) return msg('Select a facility', 'e');
+  
+  if (!isEditMode && isAlreadySubmitted) {
+    return msg('❌ This facility has already submitted for this week. Use Edit Record instead.', 'e');
+  }
+  
+  let no = document.querySelector('input[name="ct"]:checked').value === 'nocases';
+  
+  if (!no) {
+    let zeroFields = [];
+    DISEASES.forEach(d => {
+      if (sel[d.k] === undefined) return;
+      let comm = parseInt(document.getElementById(d.k + '_comm')?.value) || 0;
+      let def = parseInt(document.getElementById(d.k + '_def')?.value) || 0;
+      if (comm === 0 && def === 0) {
         zeroFields.push(d.n);
       }
     });
-    if(zeroFields.length>0){
-      return msg('⚠️ Please enter numbers greater than 0 for: '+zeroFields.join(', '),'e');
+    if (zeroFields.length > 0) {
+      return msg('⚠️ Please enter numbers greater than 0 for: ' + zeroFields.join(', '), 'e');
     }
   }
   
-  let p={
-    action:isEditMode?'editRecord':'submitCommunityData',
-    Region:'Addis Ababa',SubCity:currentZone,Woreda:currentWoreda,FacilityName:f,
-    Year:epiY,Month:epiM,EpiWeek:epiW,NoCases:no?'true':'false',Data:{}
+  let p = {
+    action: isEditMode ? 'editRecord' : 'submitCommunityData',
+    Region: 'Addis Ababa',
+    SubCity: currentZone,
+    Woreda: currentWoreda,
+    FacilityName: f,
+    Year: epiY,
+    Month: epiM,
+    EpiWeek: epiW,
+    NoCases: no ? 'true' : 'false',
+    Data: {}
   };
   
-  if(!no){
-    DISEASES.forEach(d=>{
-      if(sel[d.k]===undefined)return;
-      p.Data[d.k]={
-        comm:parseInt(document.getElementById(d.k+'_comm')?.value)||0,
-        def:parseInt(document.getElementById(d.k+'_def')?.value)||0,
-        t30:d.t30?(parseInt(document.getElementById(d.k+'_30m')?.value)||0):0
+  if (!no) {
+    DISEASES.forEach(d => {
+      if (sel[d.k] === undefined) return;
+      p.Data[d.k] = {
+        comm: parseInt(document.getElementById(d.k + '_comm')?.value) || 0,
+        def: parseInt(document.getElementById(d.k + '_def')?.value) || 0,
+        t30: d.t30 ? (parseInt(document.getElementById(d.k + '_30m')?.value) || 0) : 0
       };
     });
-    p.Data.rumors={
-      received:parseInt(document.getElementById('rumor_rcv')?.value)||0,
-      investigated:parseInt(document.getElementById('rumor_inv')?.value)||0,
-      unusual:document.getElementById('unusual_ev')?.value||''
+    p.Data.rumors = {
+      received: parseInt(document.getElementById('rumor_rcv')?.value) || 0,
+      investigated: parseInt(document.getElementById('rumor_inv')?.value) || 0,
+      unusual: document.getElementById('unusual_ev')?.value || ''
     };
   }
   
-  let btn=document.getElementById('submitBtn');
-  btn.disabled=true;btn.textContent='Processing...';
+  let btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Processing...';
   
-  fetch(SCRIPT_API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(p)})
-  .then(r=>r.json()).then(res=>{
-    if(res.status==='success'){
-      msg(isEditMode?'✓ Record updated!':'✓ Submitted successfully!','s');
-      if(typeof confetti==='function')confetti({particleCount:150,spread:80,origin:{y:0.6}});
-      loadMetrics();
-      isAlreadySubmitted=true;isEditMode=false;
-      lastSubmittedFacility=f;
-      document.getElementById('lockedFacilityName').textContent=f;
-      document.getElementById('facilityLockedMsg').classList.add('show');
-      document.getElementById('submitBtn').disabled=true;
-      document.getElementById('editBtn').disabled=false;
-    }else if(res.status==='duplicate'){
-      msg('❌ Duplicate detected! This facility already submitted for Week '+epiW+'. Use Edit Record.','e');
-      isAlreadySubmitted=true;
-      document.getElementById('lockedFacilityName').textContent=f;
-      document.getElementById('facilityLockedMsg').classList.add('show');
-      document.getElementById('submitBtn').disabled=true;
-      document.getElementById('editBtn').disabled=false;
-    }else{
-      msg('Error: '+res.message,'e');
-      btn.disabled=false;btn.textContent=isEditMode?'Update Report':'Submit Report';
-    }
-  }).catch(()=>{
-    msg('Network error. Ensure script is deployed correctly.','e');
-    btn.disabled=false;btn.textContent=isEditMode?'Update Report':'Submit Report';
-  });
+  fetch(SCRIPT_API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(p)
+  })
+    .then(r => r.json())
+    .then(res => {
+      if (res.status === 'success') {
+        msg(isEditMode ? '✓ Record updated!' : '✓ Submitted successfully!', 's');
+        if (typeof confetti === 'function') confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+        loadMetrics();
+        isAlreadySubmitted = true;
+        isEditMode = false;
+        lastSubmittedFacility = f;
+        document.getElementById('lockedFacilityName').textContent = f;
+        document.getElementById('facilityLockedMsg').classList.add('show');
+        document.getElementById('submitBtn').disabled = true;
+        document.getElementById('editBtn').disabled = false;
+      } else if (res.status === 'duplicate') {
+        msg('❌ Duplicate detected! This facility already submitted for Week ' + epiW + '. Use Edit Record.', 'e');
+        isAlreadySubmitted = true;
+        document.getElementById('lockedFacilityName').textContent = f;
+        document.getElementById('facilityLockedMsg').classList.add('show');
+        document.getElementById('submitBtn').disabled = true;
+        document.getElementById('editBtn').disabled = false;
+      } else {
+        msg('Error: ' + res.message, 'e');
+        btn.disabled = false;
+        btn.textContent = isEditMode ? 'Update Report' : 'Submit Report';
+      }
+    })
+    .catch(() => {
+      msg('Network error. Ensure script is deployed correctly.', 'e');
+      btn.disabled = false;
+      btn.textContent = isEditMode ? 'Update Report' : 'Submit Report';
+    });
 }
 
-function viewData(){
-  if(!currentWoredaId)return msg('Enter Woreda ID first','e');
-  let f=document.getElementById('fs').value||'';
-  fetch(SCRIPT_API_URL+'?action=getData&woreda='+encodeURIComponent(currentWoreda)+'&week='+epiW+'&year='+epiY+'&facility='+encodeURIComponent(f))
-  .then(r=>r.json()).then(res=>{
-    document.getElementById('viewTitle').textContent=(f||currentWoreda)+' - Week '+epiW+' '+epiY;
-    if(res.headers && res.rows){
-      document.getElementById('viewHead').innerHTML='<tr>'+res.headers.map(h=>'<th>'+h+'</th>').join('')+'</tr>';
-      document.getElementById('viewBody').innerHTML=res.rows.length?res.rows.map(r=>'<tr>'+r.map(c=>'<td>'+(c||'')+'</td>').join('')+'</tr>').join(''):'<tr><td colspan="100" style="text-align:center;padding:20px;color:#94a3b8">No data found</td></tr>';
-    }
-    document.getElementById('viewModal').classList.add('show');
-  }).catch(()=>msg('Could not load data','e'));
+function viewData() {
+  if (!currentWoredaId) return msg('Enter Woreda ID first', 'e');
+  let f = document.getElementById('fs').value || '';
+  
+  fetch(SCRIPT_API_URL + '?action=getData&woreda=' + encodeURIComponent(currentWoreda) + '&week=' + epiW + '&year=' + epiY + '&facility=' + encodeURIComponent(f))
+    .then(r => r.json())
+    .then(res => {
+      document.getElementById('viewTitle').textContent = (f || currentWoreda) + ' - Week ' + epiW + ' ' + epiY;
+      if (res.headers && res.rows) {
+        document.getElementById('viewHead').innerHTML = '<tr>' + res.headers.map(h => '<th>' + h + '</th>').join('') + '</tr>';
+        
+        if (res.rows.length) {
+          document.getElementById('viewBody').innerHTML = res.rows.map(r => {
+            return '<tr>' + r.map(c => '<td>' + (c || '') + '</td>').join('') + '</tr>';
+          }).join('');
+        } else {
+          document.getElementById('viewBody').innerHTML = '<tr><td colspan="100" style="text-align:center; padding:20px; color:#94a3b8;">No data found</td></tr>';
+        }
+      }
+      document.getElementById('viewModal').classList.add('show');
+    })
+    .catch(() => msg('Could not load data', 'e'));
 }
 
-function showExport(){
-  if(!currentWoredaId)return msg('Enter Woreda ID first','e');
-  let f=document.getElementById('fs').value||'';
-  window.open(SCRIPT_API_URL+'?action=exportCSV&woreda='+encodeURIComponent(currentWoreda)+'&week='+epiW+'&year='+epiY+'&facility='+encodeURIComponent(f),'_blank');
+function showExport() {
+  if (!currentWoredaId) return msg('Enter Woreda ID first', 'e');
+  let f = document.getElementById('fs').value || '';
+  window.open(SCRIPT_API_URL + '?action=exportCSV&woreda=' + encodeURIComponent(currentWoreda) + '&week=' + epiW + '&year=' + epiY + '&facility=' + encodeURIComponent(f), '_blank');
 }
 
-function resetAll(){
-  sel={};renderTags();renderST();renderCards();updateSections();calculateAndValidate();
-  document.getElementById('unusual_ev').value='';
-  document.querySelector('input[name="ct"][value="cases"]').checked=true;tog();
-  isEditMode=false;isAlreadySubmitted=false;
+function resetAll() {
+  sel = {};
+  renderTags();
+  renderST();
+  renderCards();
+  updateSections();
+  calculateAndValidate();
+  
+  document.getElementById('unusual_ev').value = '';
+  document.querySelector('input[name="ct"][value="cases"]').checked = true;
+  tog();
+  
+  isEditMode = false;
+  isAlreadySubmitted = false;
   document.getElementById('facilityLockedMsg').classList.remove('show');
-  document.getElementById('editBtn').disabled=true;
-  document.getElementById('submitBtn').textContent='Select Facility to Submit';
+  document.getElementById('editBtn').disabled = true;
+  document.getElementById('submitBtn').textContent = 'Select Facility to Submit';
 }
 
-function msg(t,ty){
-  let m=document.getElementById('msg');
-  m.innerHTML='<span>'+t+'</span>';
-  m.className='msg '+ty+' show';
+function msg(t, ty) {
+  let m = document.getElementById('msg');
+  m.innerHTML = '<span>' + t + '</span>';
+  m.className = 'msg ' + ty + ' show';
   clearTimeout(m._timeout);
-  m._timeout=setTimeout(()=>{m.className='msg '+ty;},4000);
+  m._timeout = setTimeout(() => {
+    m.className = 'msg ' + ty;
+  }, 4000);
 }
 
-window.addEventListener('DOMContentLoaded',init);
+window.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>
