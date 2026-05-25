@@ -360,7 +360,7 @@ function loadFacilities() {
         let c = rows[i];
         if (c.length < 4) continue;
         let ty = (c[ct] || '').toLowerCase(), ow = (c[co] || '').toLowerCase(), st = (c[cs] || '').toLowerCase();
-        if (st.includes('operational') && ty.includes('health center') && (ow.includes('public') || ow.includes('gov'))) {
+        if (st.includes('operational') && ty.includes('health center') && ow === 'public/government') {
           facList.push({ id: c[cid], zone: c[cz], woreda: c[cw], fac: c[cf] });
         }
       }
